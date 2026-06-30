@@ -1,4 +1,4 @@
-# AutoRouterCOnfiguration
+# AutoRouterConfiguration
 
 A tool for automatically setting up Teltonika routers (RUT/TRB) over a LAN
 cable — no need to click through the web interface by hand.
