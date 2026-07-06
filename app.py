@@ -26,7 +26,7 @@ class App(tk.Tk):
 
         # Create a horizontal separator inbetween selections and passwords
         self.cut_horiz_m2 = ttk.Separator(master=self, orient="horizontal")
-        self.cut_horiz_m2.place(relx=0.01, rely=0.5, relwidth=0.50, anchor="sw")
+        self.cut_horiz_m2.place(relx=0.01, rely=0.52, relwidth=0.50, anchor="sw")
 
     def name_label(self):
         # Create a main label
@@ -37,7 +37,8 @@ class App(tk.Tk):
         self.fm_label = tk.Label(master=self, text=conf.FIRMWARE_TEXT, font=conf.FONT_A16)
         self.fm_label.place(relx=0.01, rely=0.20)
 
-        self.select_fm = ttk.Combobox(master=self, values=conf.FIRMWARE_LIST, font=conf.FONT_A16)
+        firmware_list = [item["Name"] for item in conf.FIRMWARE_LIST]
+        self.select_fm = ttk.Combobox(master=self, values=firmware_list, font=conf.FONT_A16)
         self.select_fm.place(relx=0.25, rely=0.20)
 
     def isp_selection(self):
@@ -45,7 +46,8 @@ class App(tk.Tk):
         self.isp_label = tk.Label(master=self, text=conf.ISP_TEXT, font=conf.FONT_A16)
         self.isp_label.place(relx=0.01, rely=0.30)
 
-        self.select_isp = ttk.Combobox(master=self, values=conf.ISP_LIST, font=conf.FONT_A16)
+        isp_list = [item["ISP"] for item in conf.ISP_PROFILE_LIST]
+        self.select_isp = ttk.Combobox(master=self, values=isp_list, font=conf.FONT_A16)
         self.select_isp.place(relx=0.25, rely=0.30)
 
         self.show_ip = tk.Label(master=self, text=f"# IP = {self.get_ip()}", font=conf.FONT_A8)
@@ -53,12 +55,28 @@ class App(tk.Tk):
 
         self.select_isp.bind("<<ComboboxSelected>>", self.update_ip)
 
-    def apn_selection(self):
-        self.apn_label = tk.Label(master=self, text=conf.APN_TEXT, font=conf.FONT_A16)
+    def provider_selection(self):
+        self.apn_label = tk.Label(master=self, text=conf.PROVIDER_TEXT, font=conf.FONT_A16)
         self.apn_label.place(relx=0.01, rely=0.40)
 
-        self.select_apn = ttk.Combobox(master=self, values=conf.APN_LIST, font=conf.FONT_A16)
-        self.select_apn.place(relx=0.25, rely=0.40)
+        provider_list = [list(item.keys())[0] for item in conf.PROVIDER_LIST]
+        self.select_provider = ttk.Combobox(master=self, values=provider_list, font=conf.FONT_A16)
+        self.select_provider.place(relx=0.25, rely=0.40)
+
+        self.select_provider.bind("<<ComboboxSelected>>", self.tarif_selection)
+
+
+    def tarif_selection(self, event=None):
+        self.apn_label = tk.Label(master=self, text=conf.PROVIDER_TEXT, font=conf.FONT_A16)
+        self.apn_label.place(relx=0.01, rely=0.45)
+        
+        selected_provider = self.select_provider.get()
+        provider_data = next(item for item in conf.PROVIDER_LIST if selected_provider in item)
+        apn_list = [entry["Tarif"] for entry in provider_data[selected_provider]]
+
+        self.select_tarif = ttk.Combobox(master=self, values=apn_list, font=conf.FONT_A16)
+        self.select_tarif.place(relx=0.25, rely=0.45)
+
 
     def get_ip(self):
         isp = self.select_isp.get()
@@ -81,10 +99,8 @@ class App(tk.Tk):
         self.name_label()
         self.firmware_selection()
         self.isp_selection()
-        self.apn_selection()
+        self.provider_selection()
         self.mainloop()
-
-
 
 
 
@@ -143,21 +159,3 @@ if __name__ == "__main__":
 #         pass
 
 #Main class for the Configuration commands.
-class Configuration:
-    def __init__(self):
-        pass
-
-    def update_firmware(self):
-        #Code to update firmware
-        pass
-
-    def change_password(self):
-        #Code to change password
-        pass
-
-    def select_apn_model(self):
-        #Code to select apn model
-        pass
-
-
-# NOT FINISHED

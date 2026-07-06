@@ -1,0 +1,131 @@
+{
+    "FIRMWARE_LIST": [
+        {
+            "Name": "RUT2_R_GPL_00.07.06.19_WEBUI",
+            "PATH": "C:/Users/Praktikant01/Desktop/Router_Firmwares/RUT2_R_GPL_00.07.06.19_WEBUI.bin"
+        },
+        {
+            "Name": "RUT36X_R_GPL_00.07.14.4_WEBUI",
+            "PATH": "C:/Users/Praktikant01/Desktop/Router_Firmwares/RUT36X_R_GPL_00.07.14.4_WEBUI.bin"
+        },
+        {
+            "Name": "RUT361_R_GPL_00.07.11.2_fresh_install",
+            "PATH": "C:/Users/Praktikant01/Desktop/Router_Firmwares/RUT361_R_GPL_00.07.11.2_fresh_install.bin"
+        },
+        {
+            "Name": "TRB500_R_GPL_00.07.11.2__fresh_install",
+            "PATH": "C:/Users/Praktikant01/Desktop/Router_Firmwares/TRB500_R_GPL_00.07.11.2__fresh_install.bin"
+        },
+        {
+            "Name": "TRB501_R_SDK_00.07.20.3_WEBUI",
+            "PATH": "C:/Users/Praktikant01/Desktop/Router_Firmwares/TRB501_R_SDK_00.07.20.3_WEBUI.bin"
+        }
+
+    ],
+
+    "ISP_PROFILE_LIST": [
+        {
+            "ISP": "ISP 1",
+            "IP": "192.168.5.1"
+        },
+        {
+            "ISP": "ISP 2",
+            "IP": "192.168.6.1"
+        },
+        {
+            "ISP": "ISP 3",
+            "IP": "192.168.7.1"
+        },
+        {
+            "ISP": "ISP 4",
+            "IP": "192.168.8.1"
+        }
+    ],
+
+    "PROVIDER_LIST": [
+        {
+            "Vodafone": [
+                {
+                    "Tarif": "IoT",
+                    "APN": "m2m.vodafone.de"
+                },
+                {
+                    "Tarif": "Red/Black Business+",
+                    "APN": "web.vodafone.de"
+                }
+            ]
+        },
+        {
+            "o2": [
+                {
+                    "Tarif": "Alle",
+                    "APN": "internet"
+                }
+            ]
+        },
+        {
+            "DTAG": [
+                {
+                    "Tarif": "Alle",
+                    "APN": "internet.telekom"
+                }
+            ]
+        },
+        {
+            "Jola": [
+                {
+                    "Tarif": "Multinet (Backup)",
+                    "APN": "3iot2.com"
+                },
+                {
+                    "Tarif": "Vodafone Unlimited UK",
+                    "APN": "internet"
+                },
+                {
+                    "Tarif": "Three Unlimited UK",
+                    "APN": "three.co.uk"
+                }
+            ]
+        },
+        {
+            "TATA": [
+                {
+                    "Tarif": "Alle",
+                    "APN": "move.dataxs.mobi"
+                }
+            ]
+        },
+        {
+            "Netia": [
+                {
+                    "Tarif": "Unlimited Polen",
+                    "APN": "internet"
+                }
+            ]
+        },
+        {
+            "WindTree": [
+                {
+                    "Tarif": "Unlimited Italien",
+                    "APN": "internet.wind"
+                }
+            ]
+        },
+        {
+            "A1": [
+                {
+                    "Tarif": "Unlimited Österreich",
+                    "APN": "a1.net"
+                }
+            ]
+        },
+        {
+            "Digital Republic": [
+                {
+                    "Tarif": "Unlimited Schweiz",
+                    "APN": "internet"
+                }
+            ]
+        }
+    ]
+}
