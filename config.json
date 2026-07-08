@@ -2,25 +2,29 @@
     "FIRMWARE_LIST": [
         {
             "Name": "RUT2_R_GPL",
+            "Version":"RUT2_R_GPL_00.07.06.19",
             "PATH": "C:/Users/Praktikant01/Desktop/Router_Firmwares/RUT2_R_GPL_00.07.06.19_WEBUI.bin"
         },
         {
             "Name": "RUT36X_R_GPL",
+            "Version":"RUT36X_R_GPL_00.07.14.4",
             "PATH": "C:/Users/Praktikant01/Desktop/Router_Firmwares/RUT36X_R_GPL_00.07.14.4_WEBUI.bin"
         },
         {
             "Name": "RUT361_R_GPL",
+            "Version":"RUT361_R_GPL_00.07.11.2",
             "PATH": "C:/Users/Praktikant01/Desktop/Router_Firmwares/RUT361_R_GPL_00.07.11.2_fresh_install.bin"
         },
         {
             "Name": "TRB500_R_GPL",
+            "Version":"TRB500_R_GPL_00.07.11.2",
             "PATH": "C:/Users/Praktikant01/Desktop/Router_Firmwares/TRB500_R_GPL_00.07.11.2__fresh_install.bin"
         },
         {
             "Name": "TRB501_R_SDK",
+            "Version":"TRB501_R_SDK_00.07.20.3",
             "PATH": "C:/Users/Praktikant01/Desktop/Router_Firmwares/TRB501_R_SDK_00.07.20.3_WEBUI.bin"
         }
-
     ],
 
     "ISP_PROFILE_LIST": [

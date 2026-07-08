@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from tooltip import Tooltip
 from router import Router
 import json
 
@@ -27,11 +28,11 @@ class App(tk.Tk):
 
     def screen_separation(self):
         # Create a vertical separator for status and output
-        self.cut_verti = ttk.Separator(
+        self.cut_vertikal = ttk.Separator(
             master=self,
             orient="vertical"
         )
-        self.cut_verti.place(
+        self.cut_vertikal.place(
             relx=0.75,
             rely=0,
             relheight=1,
@@ -39,11 +40,11 @@ class App(tk.Tk):
         )
 
         # Create a horizontal separator for status and output
-        self.cut_horiz = ttk.Separator(
+        self.cut_horizontal = ttk.Separator(
             master=self,
             orient="horizontal"
         )
-        self.cut_horiz.place(
+        self.cut_horizontal.place(
             relx=1,
             rely=0.8,
             relwidth=0.25,
@@ -51,11 +52,11 @@ class App(tk.Tk):
         )
 
         # Create a horizontal separator inbetween label and selections
-        self.cut_horiz_m1 = ttk.Separator(
+        self.cut_horizontal_m1 = ttk.Separator(
             master=self,
             orient="horizontal"
         )
-        self.cut_horiz_m1.place(
+        self.cut_horizontal_m1.place(
             relx=0.01,
             rely=0.15,
             relwidth=0.50,
@@ -63,13 +64,13 @@ class App(tk.Tk):
         )
 
         # Create a horizontal separator inbetween selections and passwords
-        self.cut_horiz_m2 = ttk.Separator(
+        self.cut_horizontal_m2 = ttk.Separator(
             master=self,
             orient="horizontal"
         )
-        self.cut_horiz_m2.place(
+        self.cut_horizontal_m2.place(
             relx=0.01,
-            rely=0.52,
+            rely=0.60,
             relwidth=0.50,
             anchor="sw"
         )
@@ -80,7 +81,8 @@ class App(tk.Tk):
         self.label = tk.Label(
             master=self,
             text="Auto Router Configuration Tool",
-            font=("Arial", 28)
+            font=("Arial", 28, "bold")
+
         )
         self.label.place(
             relx=0.01,
@@ -90,26 +92,27 @@ class App(tk.Tk):
 
 
     def firmware_selection(self):
-        self.fm_label = tk.Label(
+        self.firmware_label = tk.Label(
             master=self,
             text="Select Firmware",
-            font=("Arial", 16)
+            font=("Arial", 20)
         )
-        self.fm_label.place(
+        self.firmware_label.place(
             relx=0.01,
             rely=0.20
         )
 
         firmware_list = [item["Name"] for item in FIRMWARE_LIST]
-        self.select_fm = ttk.Combobox(
+        self.select_firmware = ttk.Combobox(
             master=self,
             values=firmware_list,
-            font=("Arial", 16)
+            font=("Arial", 20)
         )
-        self.select_fm.place(
+        self.select_firmware.place(
             relx=0.25,
             rely=0.20
         )
+
 
 
     def isp_selection(self):
@@ -117,7 +120,7 @@ class App(tk.Tk):
         self.isp_label = tk.Label(
             master=self,
             text="Select ISP Profile",
-            font=("Arial", 16)
+            font=("Arial", 20)
         )
         self.isp_label.place(
             relx=0.01,
@@ -129,21 +132,22 @@ class App(tk.Tk):
         self.select_isp = ttk.Combobox(
             master=self,
             values=isp_list,
-            font=("Arial", 16)
+            font=("Arial", 20)
         )
         self.select_isp.place(
             relx=0.25,
             rely=0.30
         )
 
+
         self.show_ip = tk.Label(
             master=self,
             text=f"# IP = {self.get_ip()}",
-            font=("Arial", 8)
+            font=("Arial", 10)
         )
         self.show_ip.place(
             relx=0.25,
-            rely=0.345
+            rely=0.355
         )
 
         self.select_isp.bind("<<ComboboxSelected>>", self.update_ip)
@@ -153,7 +157,7 @@ class App(tk.Tk):
         self.apn_label = tk.Label(
             master=self,
             text="Select Provider",
-            font=("Arial", 16)
+            font=("Arial", 20)
         )
         self.apn_label.place(
             relx=0.01,
@@ -164,40 +168,43 @@ class App(tk.Tk):
         self.select_provider = ttk.Combobox(
             master=self,
             values=provider_list,
-            font=("Arial", 16)
+            font=("Arial", 20)
         )
         self.select_provider.place(
             relx=0.25,
             rely=0.40
         )
 
-        self.select_provider.bind("<<ComboboxSelected>>", self.apn_selection)
+        self.select_provider.bind("<<ComboboxSelected>>", self.update_apn_list)
 
 
-    def apn_selection(self, event=None):
+    def apn_selection(self):
         self.apn_label = tk.Label(
             master=self,
             text="Select APN",
-            font=("Arial", 16)
+            font=("Arial", 20)
         )
         self.apn_label.place(
             relx=0.01,
-            rely=0.46
+            rely=0.50
         )
-
-        selected_provider = self.select_provider.get()
-        provider_data = next(item for item in PROVIDER_LIST if selected_provider in item)
-        apn_list = [entry["APN"] for entry in provider_data[selected_provider]]
 
         self.select_apn = ttk.Combobox(
             master=self,
-            values=apn_list,
-            font=("Arial", 16)
+            font=("Arial", 20)
         )
         self.select_apn.place(
             relx=0.25,
-            rely=0.46
+            rely=0.50
         )
+    
+
+    def update_apn_list(self, event=None):
+        selected_provider = self.select_provider.get()
+        provider_data = next(item for item in PROVIDER_LIST if selected_provider in item)
+        apn_list = [entry["APN"] for entry in provider_data[selected_provider]]
+        self.select_apn.config(values=apn_list)
+        self.select_apn.set(apn_list[0])
 
 
     def get_ip(self): # doesn't function for now
@@ -215,51 +222,190 @@ class App(tk.Tk):
 
 
     def update_ip(self, event=None):
-        self.show_ip.configtext=f"# IP = {self.get_ip()}"
+        self.show_ip.config(text=f"# IP = {self.get_ip()}")
 
 
-    def status(self):
-        self.status_light = tk.Label(
+    def router_status(self):  
+        self.router_status_text = tk.Label(
+            master=self,
+            text="Active",
+            font=("Arial", 28),
+            fg="black"
+        )
+        self.router_status_text.place(
+            relx=0.76,
+            rely=0.05
+        )
+
+        self.router_status_light = tk.Label(
             master=self,
             text="●",
             font=("Arial", 28),
             fg="red"
         )
-        self.status_light.place(
-            relx=0.77,
+        self.router_status_light.place(
+            relx=0.96,
             rely=0.05
-        )  
+        )
+        self.update_router_status()
 
-        self.after(1000, self.update_status)
 
-
-    def update_status(self):
+    def update_router_status(self):
         if self.router.is_connected():
-            self.status_light.config(fg="green")
+            self.router_status_light.config(fg="green")
         else:
-            self.status_light.config(fg="red")
-        
+            self.router_status_light.config(fg="red")
 
-    def default_password_entry(self):
-        self.def_pw_label = tk.Label(
+        self.after(1000, self.update_router_status)
+
+
+    def connection_status(self):
+        self.connection_status_text = tk.Label(
+            master=self,
+            text="Connected",
+            font=("Arial", 28),
+            fg="black"
+        )
+        self.connection_status_text.place(
+            relx=0.76,
+            rely=0.15
+        )
+
+        self.connection_status_light = tk.Label(
+            master=self,
+            text="●",
+            font=("Arial", 28),
+            fg="red"
+        )
+        self.connection_status_light.place(
+            relx=0.96,
+            rely=0.15
+        )
+        self.update_connection_status()
+
+
+    def update_connection_status(self):
+        if self.router.is_router_active():
+            self.connection_status_light.config(fg="green")
+        else:
+            self.connection_status_light.config(fg="red")
+
+        self.after(1000, self.update_connection_status)
+
+
+    def firmware_status(self):
+        self.firmware_status_text = tk.Label(
+            master=self,
+            text="Updated",
+            font=("Arial", 28),
+            fg="black"
+        )
+        self.firmware_status_text.place(
+            relx=0.76,
+            rely=0.25
+        )
+
+        self.firmware_status_light = tk.Label(
+            master=self,
+            text="●",
+            font=("Arial", 28),
+            fg="red"
+        )
+        self.firmware_status_light.place(
+            relx=0.96,
+            rely=0.25
+        )
+        self.update_firmware_status()
+
+
+    def update_firmware_status(self):
+        selected = FIRMWARE_LIST[self.select_firmware.current()]
+        
+        if self.router.is_connected() and self.router.is_router_updated(selected["Version"]):
+            self.firmware_status_light.config(fg="green")
+        else:
+            self.firmware_status_light.config(fg="red")
+
+        self.after(1000, self.update_firmware_status)
+
+
+    def new_password_entry(self):
+        self.new_password_label = tk.Label(
             master=self,
             text="Password",
             font=("Arial", 20)
         )
-        self.def_pw_label.place(
+        self.new_password_label.place(
             relx=0.01,
-            rely=0.70
+            rely=0.62
         )
-
-        self.def_pw = tk.Entry(
+        
+        self.new_password= tk.Entry(
             master=self,
             font=("Arial", 20)
         )
-        self.def_pw.insert(0, "admin01")
-        self.def_pw.place(
-            relx=0.138,
-            rely=0.70
+        self.new_password.insert(
+            0, "admin01"
         )
+        self.new_password.place(
+            relx=0.138,
+            rely=0.62
+        )
+
+        self.new_password_help = tk.Label(
+            master=self,
+            text="?",
+            font=("Arial", 16),
+            fg="gray"
+        )
+        self.new_password_help.place(
+            relx=0.43,
+            rely=0.625
+        )
+        Tooltip(
+            widget=self.new_password_help,
+            text="New router password\nWrite one to change it"
+        )
+
+
+    def default_password_entry(self):
+        self.default_password_label = tk.Label(
+            master=self,
+            text="Password",
+            font=("Arial", 20)
+        )
+        self.default_password_label.place(
+            relx=0.01,
+            rely=0.72
+        )
+        
+        self.default_password= tk.Entry(
+            master=self,
+            font=("Arial", 20)
+        )
+        self.default_password.insert(
+            0, "admin01"
+        )
+        self.default_password.place(
+            relx=0.138,
+            rely=0.72
+        )
+
+        self.default_password_help = tk.Label(
+            master=self,
+            text="?",
+            font=("Arial", 16),
+            fg="gray"
+        )
+        self.default_password_help.place(
+            relx=0.43,
+            rely=0.725
+        )
+        Tooltip(
+            widget=self.default_password_help,
+            text="Default router password\nUsually admin01 after factory reset"
+        )
+
 
     def connect_button(self):
         # Button to connect to the router
@@ -268,12 +414,12 @@ class App(tk.Tk):
             text="Connect",
             font=("Arial", 24),
             command=lambda: self.router.connect(
-                def_pw="Pils2018"
+                default_password=self.default_password.get()
             )
         )
         self.con_button.place(
-            relx=0.05,
-            rely=0.80
+            relx=0.01,
+            rely=0.90
         )
 
 
@@ -286,11 +432,13 @@ class App(tk.Tk):
             master=self,
             text="Update",
             font=("Arial", 24),
-            command=self.router.update
+            command=lambda: self.router.update(
+                firmware_path=FIRMWARE_LIST[self.select_firmware.current()]["PATH"]
+            )
         )
         self.upd_button.place(
-            relx=0.30,
-            rely=0.80
+            relx=0.21,
+            rely=0.90
         )
 
 
@@ -301,13 +449,18 @@ class App(tk.Tk):
         self.firmware_selection()
         self.isp_selection()
         self.provider_selection()
+        self.apn_selection()
 
+        self.new_password_entry()
         self.default_password_entry()
 
         self.connect_button()
         self.update_button()
 
-        self.status()
+        self.router_status()
+        self.connection_status()
+        self.firmware_status()
+        
         self.mainloop()
 
 
