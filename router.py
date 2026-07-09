@@ -2,7 +2,6 @@ import paramiko
 import threading
 import subprocess
 import time
-import json
 
 
 class Router():
@@ -50,12 +49,6 @@ class Router():
         return self.run_command("uci show system")
 
 
-    def get_firmware_name(self):
-        board = self.run_command("cat /etc/board.json")
-        board_data = json.loads(board)
-        return board_data["model"]["id"] # "teltonika,rut2xx"
-
-
     def get_firmware_version(self):
         return self.run_command("cat /etc/version").strip() # "RUT2_R_GPL_00.07.06.19"
 
@@ -80,11 +73,11 @@ class Router():
         # Start update (-n = without saving last settings)
         self.run_command("sysupgrade -n /tmp/firmware.bin")
         
-        # # Auto Reconnect with default password
+        # Auto Reconnect with default password
         time.sleep(5)
         self._reconnect()
-
         
+                
     def _reconnect(self, default_password="admin01"):
         while True:
             try:
@@ -94,11 +87,15 @@ class Router():
                 time.sleep(3)
 
 
-    def change_password(self):
-        pass
+    def change_password(self, new_password):
+        self.run_command(f"echo 'root:{new_password}' | chpasswd")
         
 
     def disconnect(self):
         self.client.close()
         
 
+
+# router = Router()
+# router.connect()
+# print(router.get_firmware_version())
