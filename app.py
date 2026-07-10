@@ -1,7 +1,9 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from datetime import datetime
 from tooltip import Tooltip
 from router import Router
+import threading
 import json
 
 
@@ -23,6 +25,11 @@ class App(tk.Tk):
         self.resizable(False, False)
         self.router = router
         self.status_light = "✲"
+
+        # Track previous states to log only on change
+        self._prev_active_state = None
+        self._prev_connected_state = None
+        self._prev_updated_state = None
 
 
     def create_help_label(self, relx, rely, text="?", font=("Arial", 16), fg="gray"):
@@ -258,7 +265,6 @@ class App(tk.Tk):
         )
         self.active_text.place(relx=0.71, rely=0.035)
 
-        # Indicator
         self.active_indicator = tk.Label(
             master=self,
             text=self.status_light,
@@ -278,15 +284,20 @@ class App(tk.Tk):
 
 
     def refresh_active(self):
-        if self.router.is_router_active():
-            self.active_indicator.config(fg="green")
-        else:
-            self.active_indicator.config(fg="red")
-        self.after(1000, self.refresh_active)
+        threading.Thread(target=self._check_active, daemon=True).start()
+        self.after(2000, self.refresh_active)
+
+    def _check_active(self):
+        current = self.router.is_router_active(self.router_ip.get())
+        if current != self._prev_active_state:
+            self._prev_active_state = current
+            if current:
+                self.active_indicator.config(fg="green")
+            else:
+                self.active_indicator.config(fg="red")
 
 
     def connect_status(self):
-        # Button
         self.connect_button = tk.Button(
             master=self,
             text="Connect",
@@ -299,7 +310,6 @@ class App(tk.Tk):
         )
         self.connect_button.place(relx=0.57, rely=0.15)
 
-        # Status text
         self.connect_text = tk.Label(
             master=self,
             text="Connected",
@@ -308,7 +318,6 @@ class App(tk.Tk):
         )
         self.connect_text.place(relx=0.71, rely=0.15)
 
-        # Indicator
         self.connect_indicator = tk.Label(
             master=self,
             text=self.status_light,
@@ -328,15 +337,17 @@ class App(tk.Tk):
 
 
     def refresh_connect(self):
-        if self.router.is_connected():
-            self.connect_indicator.config(fg="green")
-        else:
-            self.connect_indicator.config(fg="red")
+        current = self.router.is_connected()
+        if current != self._prev_connected_state:
+            self._prev_connected_state = current
+            if current:
+                self.connect_indicator.config(fg="green")
+            else:
+                self.connect_indicator.config(fg="red")
         self.after(1000, self.refresh_connect)
 
 
     def firmware_status(self):
-        # Button
         self.update_button = tk.Button(
             master=self,
             text="Update",
@@ -348,7 +359,6 @@ class App(tk.Tk):
         )
         self.update_button.place(relx=0.57, rely=0.25)
 
-        # Status text
         self.firmware_text = tk.Label(
             master=self,
             text="Updated",
@@ -357,7 +367,6 @@ class App(tk.Tk):
         )
         self.firmware_text.place(relx=0.71, rely=0.25)
 
-        # Indicator
         self.firmware_indicator = tk.Label(
             master=self,
             text=self.status_light,
@@ -379,11 +388,40 @@ class App(tk.Tk):
 
     def refresh_firmware(self):
         selected = FIRMWARE_LIST[self.select_firmware.current()]
-        if self.router.is_connected() and self.router.is_router_updated(selected["Version"]):
-            self.firmware_indicator.config(fg="green")
-        else:
-            self.firmware_indicator.config(fg="red")
+        current = self.router.is_connected() and self.router.is_router_updated(selected["Version"])
+        if current != self._prev_updated_state:
+            self._prev_updated_state = current
+            if current:
+                self.firmware_indicator.config(fg="green")
+            else:
+                self.firmware_indicator.config(fg="red")
         self.after(1000, self.refresh_firmware)
+
+
+    def log(self):
+        self.log_frame = tk.Frame(master=self)
+        self.log_frame.place(relx=0.57, rely=0.82, relwidth=0.43, relheight=0.18)
+
+        self.log_scrollbar = tk.Scrollbar(master=self.log_frame)
+        self.log_scrollbar.pack(side="right", fill="y")
+
+        self.log_box = tk.Text(
+            master=self.log_frame,
+            font=("Arial", 9),
+            state="disabled",
+            wrap="word",
+            yscrollcommand=self.log_scrollbar.set
+        )
+        self.log_box.pack(fill="both", expand=True)
+        self.log_scrollbar.config(command=self.log_box.yview)
+
+
+    def write_in_log(self, message):
+        time = datetime.now().strftime("%H:%M:%S")
+        self.log_box.config(state="normal")
+        self.log_box.insert("end", f"[{time}] {message}\n")
+        self.log_box.see("end")
+        self.log_box.config(state="disabled")
 
 
     def start(self):
@@ -398,6 +436,10 @@ class App(tk.Tk):
         self.new_password_entry()
         self.default_password_entry()
         self.router_ip_entry()
+
+        self.log()
+        self.write_in_log("Application started. Welcome to ARCTIC!")
+        self.write_in_log(f"Searching for router on {self.router_ip.get()}...")
 
         self.active_status()
         self.connect_status()
