@@ -30,6 +30,7 @@ class App(tk.Tk):
         self._prev_active_state = None
         self._prev_connected_state = None
         self._prev_updated_state = None
+        self._prev_ip = None
 
 
     def create_help_label(self, relx, rely, text="?", font=("Arial", 16), fg="gray"):
@@ -251,14 +252,23 @@ class App(tk.Tk):
         threading.Thread(target=self._check_active, daemon=True).start()
         self.after(2000, self.refresh_active)
 
+
     def _check_active(self):
-        current = self.router.is_router_active(self.router_ip.get())
-        if current != self._prev_active_state:
-            self._prev_active_state = current
-            if current:
+        current_ip = self.router_ip.get()
+        current_state = self.router.is_router_active(current_ip)
+
+        if current_ip != self._prev_ip:
+            self._prev_ip = current_ip
+            self.write_in_log(f"Searching for router on {current_ip}...")
+
+        if current_state != self._prev_active_state:
+            self._prev_active_state = current_state
+            if current_state:
                 self.active_indicator.config(fg="green")
+                self.write_in_log(f"Found a router on {current_ip}")
             else:
                 self.active_indicator.config(fg="red")
+                self.write_in_log(f"Didn't found / Lost router on {current_ip}")
 
 
     def button_for_connection(self):
@@ -341,7 +351,7 @@ class App(tk.Tk):
 
         self.log()
         self.write_in_log("Application started. Welcome to ARCTIC!")
-        self.write_in_log(f"Searching for router on {self.router_ip.get()}...")
+        #self.write_in_log(f"Searching for router on {self.router_ip.get()}...")
 
         self.active_status()
 
