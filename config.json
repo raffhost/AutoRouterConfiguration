@@ -46,86 +46,31 @@
         }
     ],
 
-    "PROVIDER_LIST": [
+    "APN_LIST": [
         {
-            "Vodafone": [
-                {
-                    "Tarif": "IoT",
-                    "APN": "m2m.vodafone.de"
-                }
-            ]
+            "APN": "m2m.vodafone.de"
         },
         {
-            "o2": [
-                {
-                    "Tarif": "Alle",
-                    "APN": "internet"
-                }
-            ]
+            "APN": "internet"
         },
         {
-            "DTAG": [
-                {
-                    "Tarif": "Alle",
-                    "APN": "internet.telekom"
-                }
-            ]
+            "APN": "internet.telekom"
         },
         {
-            "Jola": [
-                {
-                    "Tarif": "Multinet (Backup)",
-                    "APN": "3iot2.com"
-                },
-                {
-                    "Tarif": "Vodafone Unlimited UK",
-                    "APN": "internet"
-                },
-                {
-                    "Tarif": "Three Unlimited UK",
-                    "APN": "three.co.uk"
-                }
-            ]
+            "APN": "3iot2.com"
         },
         {
-            "TATA": [
-                {
-                    "Tarif": "Alle",
-                    "APN": "move.dataxs.mobi"
-                }
-            ]
+            "APN": "three.co.uk"
         },
         {
-            "Netia": [
-                {
-                    "Tarif": "Unlimited Polen",
-                    "APN": "internet"
-                }
-            ]
+            "APN": "move.dataxs.mobi"
         },
         {
-            "WindTree": [
-                {
-                    "Tarif": "Unlimited Italien",
-                    "APN": "internet.wind"
-                }
-            ]
+            "APN": "internet.wind"
         },
         {
-            "A1": [
-                {
-                    "Tarif": "Unlimited Österreich",
-                    "APN": "a1.net"
-                }
-            ]
-        },
-        {
-            "Digital Republic": [
-                {
-                    "Tarif": "Unlimited Schweiz",
-                    "APN": "internet"
-                }
-            ]
+            "APN": "a1.net"
         }
     ]
 }
+                
