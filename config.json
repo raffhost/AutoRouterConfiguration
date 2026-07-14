@@ -29,6 +29,10 @@
 
     "ISP_PROFILE_LIST": [
         {
+            "ISP": "default",
+            "IP": "192.168.1.1"
+        },
+        {
             "ISP": "ISP 1",
             "IP": "100.64.5.1"
         },
