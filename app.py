@@ -113,6 +113,9 @@ class App(tk.Tk):
         )
         self.select_isp.place(relx=0.225, rely=0.275, relwidth=0.25)
 
+        # if True:
+        #     self.select_isp.bind("<<ComboboxSelected>>", self.update_ip)
+
 
     def apn_selection(self):
         self.apn_label = tk.Label(
@@ -139,22 +142,9 @@ class App(tk.Tk):
         self.select_apn.place(relx=0.225, rely=0.375, relwidth=0.25)
 
 
-    def get_ip(self):
-        isp = self.select_isp.get()
-        if isp == "ISP 1":
-            return "100.64.5.1"
-        elif isp == "ISP 2":
-            return "100.64.6.1"
-        elif isp == "ISP 3":
-            return "100.64.7.1"
-        elif isp == "ISP 4":
-            return "100.64.8.1"
-        else:
-            return "192.168.1.1"
-
-
     def update_ip(self, event=None):
-        self.router_ip.config(text=self.get_ip())
+        self.router_ip.delete(0, "end")
+        self.router_ip.insert(0, ISP_PROFILE_LIST[self.select_isp.current()]["IP"])
 
 
     def new_password_entry(self):
@@ -268,7 +258,7 @@ class App(tk.Tk):
                 self.write_in_log(f"Found a router on {current_ip}")
             else:
                 self.active_indicator.config(fg="red")
-                self.write_in_log(f"Didn't found / Lost router on {current_ip}")
+                self.write_in_log(f"Lost a router on {self._prev_ip}")
 
 
     def button_for_connection(self):
@@ -311,6 +301,18 @@ class App(tk.Tk):
         self.update_button.place(relx=0.01, rely=0.5225, relwidth=0.125, relheight=0.051)
 
 
+    # def button_for_setting_new_isp(self):
+    #     self.isp_button = tk.Button(
+    #         master=self,
+    #         text="Set ISP",
+    #         font=("Arial", 20),
+    #         bg="#CCCCCC",
+    #         command=
+    #         )
+    #     )
+    #     self.isp_button.place(relx=0.26, rely=0.5225, relwidth=0.125, relheight=0.051)
+
+
     def log(self):
         self.log_frame = tk.Frame(master=self)
         self.log_frame.place(relx=0.558, rely=0.597, relwidth=0.44, relheight=0.30)
@@ -351,7 +353,6 @@ class App(tk.Tk):
 
         self.log()
         self.write_in_log("Application started. Welcome to ARCTIC!")
-        #self.write_in_log(f"Searching for router on {self.router_ip.get()}...")
 
         self.active_status()
 
