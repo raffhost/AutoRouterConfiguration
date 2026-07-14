@@ -252,13 +252,15 @@ class App(tk.Tk):
             self.write_in_log(f"Searching for router on {current_ip}...")
 
         if current_state != self._prev_active_state:
-            self._prev_active_state = current_state
             if current_state:
                 self.active_indicator.config(fg="green")
                 self.write_in_log(f"Found a router on {current_ip}")
-            else:
+            elif self._prev_active_state != None:
                 self.active_indicator.config(fg="red")
                 self.write_in_log(f"Lost a router on {self._prev_ip}")
+            else:
+                self.active_indicator.config(fg="red")
+            self._prev_active_state = current_state
 
 
     def button_for_connection(self):
@@ -285,7 +287,7 @@ class App(tk.Tk):
                 new_password=self.new_password.get()
             )
         )
-        self.change_password_button.place(relx=0.150, rely=0.927, relwidth=0.175, relheight=0.051)
+        self.change_password_button.place(relx=0.16, rely=0.927, relwidth=0.275, relheight=0.051)
 
 
     def button_for_updating_firmware(self):
@@ -301,16 +303,30 @@ class App(tk.Tk):
         self.update_button.place(relx=0.01, rely=0.5225, relwidth=0.125, relheight=0.051)
 
 
-    # def button_for_setting_new_isp(self):
-    #     self.isp_button = tk.Button(
-    #         master=self,
-    #         text="Set ISP",
-    #         font=("Arial", 20),
-    #         bg="#CCCCCC",
-    #         command=
-    #         )
-    #     )
-    #     self.isp_button.place(relx=0.26, rely=0.5225, relwidth=0.125, relheight=0.051)
+    def button_for_updating_isp(self):
+        self.isp_button = tk.Button(
+            master=self,
+            text="Set ISP",
+            font=("Arial", 20),
+            bg="#CCCCCC",
+            command=lambda: self.router.change_isp_profile(
+                isp=self.select_isp.get()
+            )
+        )
+        self.isp_button.place(relx=0.16, rely=0.5225, relwidth=0.125, relheight=0.051)
+
+
+    def button_for_updating_apn(self):
+        self.apn_button = tk.Button(
+            master=self,
+            text="Set APN",
+            font=("Arial", 20),
+            bg="#CCCCCC",
+            command=lambda: self.router.change_apn(
+                apn=self.select_apn.get()
+            )
+        )
+        self.apn_button.place(relx=0.31, rely=0.5225, relwidth=0.125, relheight=0.051)
 
 
     def log(self):
@@ -360,6 +376,8 @@ class App(tk.Tk):
         self.button_for_password_changing()
 
         self.button_for_updating_firmware()
+        self.button_for_updating_isp()
+        self.button_for_updating_apn()
 
         self.mainloop()
 

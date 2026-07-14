@@ -68,7 +68,16 @@ class Router():
         self.run_command(f"echo 'root:{new_password}' | chpasswd")
         
 
+    def change_isp_profile(self, isp):
+        self.run_command(f"profile.sh -c {isp}")
 
+
+    def change_apn(self, apn):
+        self.run_command(f"uci set network.mob1s1a1.apn={apn}")
+        self.run_command("uci commit network")
+        self.run_command("/etc/init.d/network restart")
+    
+    
     def get_firmware_version(self):
         return self.run_command("cat /etc/version").strip() # "RUT2_R_GPL_00.07.06.19"
 
@@ -111,4 +120,5 @@ class Router():
 
 # router = Router()
 # router.connect()
-# print(router.get_firmware_version())
+# time.sleep(2)
+# print(router.show_network())
