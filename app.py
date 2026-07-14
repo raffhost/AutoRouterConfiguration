@@ -112,9 +112,8 @@ class App(tk.Tk):
             font=("Arial", 20)
         )
         self.select_isp.place(relx=0.225, rely=0.275, relwidth=0.25)
-
-        # if True:
-        #     self.select_isp.bind("<<ComboboxSelected>>", self.update_ip)
+        
+        self.select_isp.bind("<<ButtonPress>>", self.update_ip)
 
 
     def apn_selection(self):
@@ -208,7 +207,6 @@ class App(tk.Tk):
             "\nAfter a factory reset this is always 192.168.1.1." \
             "\nChange it if your router uses a different IP."
         )
-        self.select_apn.bind("<<ComboboxSelected>>", self.update_ip)
 
 
     def active_status(self):
@@ -263,44 +261,27 @@ class App(tk.Tk):
             self._prev_active_state = current_state
 
 
-    def button_for_connection(self):
-        self.connect_button = tk.Button(
-            master=self,
-            text="Connect",
-            font=("Arial", 20),
-            bg="#CCCCCC",
-            command=lambda: self.router.connect(
-                ip=self.router_ip.get(),
-                default_password=self.default_password.get()
-            )
-        )
-        self.connect_button.place(relx=0.01, rely=0.927, relwidth=0.125, relheight=0.051)
-
-    
-    def button_for_password_changing(self):
-        self.change_password_button = tk.Button(
-            master=self,
-            text="Change PW",
-            font=("Arial", 20),
-            bg="#CCCCCC",
-            command=lambda: self.router.change_password(
-                new_password=self.new_password.get()
-            )
-        )
-        self.change_password_button.place(relx=0.16, rely=0.927, relwidth=0.275, relheight=0.051)
-
-
     def button_for_updating_firmware(self):
         self.update_button = tk.Button(
             master=self,
             text="Update",
             font=("Arial", 20),
             bg="#CCCCCC",
-            command=lambda: self.router.update(
-                firmware_path=FIRMWARE_LIST[self.select_firmware.current()]["PATH"]
-            )
+            command=self._on_firmware_update
         )
         self.update_button.place(relx=0.01, rely=0.5225, relwidth=0.125, relheight=0.051)
+
+
+    def _on_firmware_update(self):
+        if not self.router.is_connected():
+            self.write_in_log("Error: Not connected. Press Connect first.")
+            return
+        if self.select_firmware.current() == -1:
+            self.write_in_log("Error: No firmware selected.")
+            return
+        path = FIRMWARE_LIST[self.select_firmware.current()]["PATH"]
+        self.write_in_log("Starting firmware update...")
+        self.router.update(firmware_path=path)
 
 
     def button_for_updating_isp(self):
@@ -309,11 +290,21 @@ class App(tk.Tk):
             text="Set ISP",
             font=("Arial", 20),
             bg="#CCCCCC",
-            command=lambda: self.router.change_isp_profile(
-                isp=self.select_isp.get()
-            )
+            command=self._on_change_isp
         )
         self.isp_button.place(relx=0.16, rely=0.5225, relwidth=0.125, relheight=0.051)
+
+
+    def _on_change_isp(self):
+        if not self.router.is_connected():
+            self.write_in_log("Error: Not connected. Press Connect first.")
+            return
+        isp = self.select_isp.get().strip()
+        if not isp:
+            self.write_in_log("Error: No ISP profile selected.")
+            return
+        self.write_in_log(f"Applying ISP profile: {isp}...")
+        self.router.change_isp_profile(isp=isp)
 
 
     def button_for_updating_apn(self):
@@ -322,11 +313,68 @@ class App(tk.Tk):
             text="Set APN",
             font=("Arial", 20),
             bg="#CCCCCC",
-            command=lambda: self.router.change_apn(
-                apn=self.select_apn.get()
-            )
+            command=self._on_change_apn
         )
         self.apn_button.place(relx=0.31, rely=0.5225, relwidth=0.125, relheight=0.051)
+
+
+    def _on_change_apn(self):
+        if not self.router.is_connected():
+            self.write_in_log("Error: Not connected. Press Connect first.")
+            return
+        apn = self.select_apn.get().strip()
+        if not apn:
+            self.write_in_log("Error: No APN selected or entered.")
+            return
+        self.write_in_log(f"Setting APN: {apn}...")
+        self.router.change_apn(apn=apn)
+
+
+    def button_for_connection(self):
+        self.connect_button = tk.Button(
+            master=self,
+            text="Connect",
+            font=("Arial", 20),
+            bg="#CCCCCC",
+            command=self._on_connect
+        )
+        self.connect_button.place(relx=0.01, rely=0.927, relwidth=0.125, relheight=0.051)
+
+
+    def _on_connect(self):
+        ip = self.router_ip.get().strip()
+        password = self.default_password.get().strip()
+        if not ip:
+            self.write_in_log("Error: Router IP is empty.")
+            return
+        if not password:
+            self.write_in_log("Error: Default password is empty.")
+            return
+        self.write_in_log(f"Connecting to {ip}...")
+        self.router.connect(ip=ip, default_password=password)
+
+    
+    def button_for_password_changing(self):
+        self.change_password_button = tk.Button(
+            master=self,
+            text="Change PW",
+            font=("Arial", 20),
+            bg="#CCCCCC",
+            command=self._on_change_password
+        )
+        self.change_password_button.place(relx=0.16, rely=0.927, relwidth=0.275, relheight=0.051)
+
+
+    def _on_change_password(self):
+        if not self.router.is_connected():
+            self.write_in_log("Error: Not connected. Press Connect first.")
+            return
+        password = self.new_password.get().strip()
+        if not password:
+            self.write_in_log("Error: New password is empty.")
+            return
+        self.write_in_log("Changing password...")
+        self.router.change_password(new_password=password)
 
 
     def log(self):
