@@ -1,5 +1,6 @@
 import paramiko
 import threading
+import socket
 import time
 
 
@@ -29,16 +30,16 @@ class Router():
             pass
 
 
-    def update(self, firmware_path):
+    def update(self, firmware_path, log):
         thread = threading.Thread(
             target=self._update_process,
-            args=(firmware_path,)
+            args=(firmware_path, log)
         )
         thread.daemon = True
         thread.start()
 
 
-    def _update_process(self, firmware_path):
+    def _update_process(self, firmware_path, log=None):
         # Copy firmware on router in /tmp/
         sftp = self.client.open_sftp() # SSH File Transfer Protocol
         sftp.put(
@@ -47,14 +48,20 @@ class Router():
         )
         sftp.close()
 
-        # Start update (-n = without saving last settings)
+        # Start update (-n = without saving last settings
         self.run_command("sysupgrade -n /tmp/firmware.bin")
-        
+        if log:
+            log("Flashing firmware... Router will reboot.")
+            time.sleep(3)
+            log("Waiting for router to reboot...")
+
         # Auto Reconnect with default password
         time.sleep(5)
         self._reconnect()
-        
+        if log:
+            log("Router is back online after update!")
                 
+
     def _reconnect(self, default_password="admin01"):
         while True:
             try:
@@ -83,7 +90,6 @@ class Router():
 
 
     def is_router_active(self, ip="192.168.1.1"):
-        import socket
         try:
             sock = socket.create_connection((ip, 22), timeout=1)
             sock.close()

@@ -154,11 +154,16 @@ class App(tk.Tk):
         )
         self.new_password_label.place(relx=0.01, rely=0.62)
 
-        self.new_password = tk.Entry(master=self, font=("Arial", 20))
+        new_pw_list=["admin01", "Start2026!"]
+        self.new_password = ttk.Combobox(
+            master=self,
+            values=new_pw_list,
+            font=("Arial", 20)
+        )
         self.new_password.insert(0, "admin01")
-        self.new_password.place(relx=0.22, rely=0.62)
+        self.new_password.place(relx=0.22, rely=0.62, relwidth=0.25)
 
-        self.new_password_help = self.create_help_label(relx=0.51, rely=0.625)
+        self.new_password_help = self.create_help_label(relx=0.485, rely=0.625)
         Tooltip(
             widget=self.new_password_help,
             text="The new password that will be set on the router." \
@@ -175,11 +180,16 @@ class App(tk.Tk):
         )
         self.default_password_label.place(relx=0.01, rely=0.72)
 
-        self.default_password = tk.Entry(master=self, font=("Arial", 20))
+        def_pw_list=["admin01",]
+        self.default_password = ttk.Combobox(
+            master=self,
+            values=def_pw_list,
+            font=("Arial", 20)
+        )
         self.default_password.insert(0, "admin01")
-        self.default_password.place(relx=0.22, rely=0.72)
+        self.default_password.place(relx=0.22, rely=0.72, relwidth=0.25, )
 
-        self.default_password_help = self.create_help_label(relx=0.51, rely=0.725)
+        self.default_password_help = self.create_help_label(relx=0.485, rely=0.725)
         Tooltip(
             widget=self.default_password_help,
             text="The current password on the router." \
@@ -196,11 +206,16 @@ class App(tk.Tk):
         )
         self.router_ip_label.place(relx=0.01, rely=0.82)
 
-        self.router_ip = tk.Entry(master=self, font=("Arial", 20))
+        ip_list = [item["IP"] for item in ISP_PROFILE_LIST]
+        self.router_ip = ttk.Combobox(
+            master=self,
+            values=ip_list,
+            font=("Arial", 20)
+        )
         self.router_ip.insert(0, "192.168.1.1")
-        self.router_ip.place(relx=0.22, rely=0.82)
+        self.router_ip.place(relx=0.22, rely=0.82, relwidth=0.25)
 
-        self.router_ip_help = self.create_help_label(relx=0.51, rely=0.825)
+        self.router_ip_help = self.create_help_label(relx=0.485, rely=0.825)
         Tooltip(
             widget=self.router_ip_help,
             text="The IP address of the router." \
@@ -225,13 +240,6 @@ class App(tk.Tk):
             fg="red"
         )
         self.active_indicator.place(relx=0.875, rely=0.015, anchor="nw")
-
-        Tooltip(
-            widget=self.active_indicator,
-            text="Shows whether the router is reachable on the network." \
-            "\nGreen = router responds to ping on 192.168.1.1." \
-            "\nRed = router not found or not connected via LAN."
-        )
 
         self.refresh_active()
 
@@ -279,9 +287,18 @@ class App(tk.Tk):
         if self.select_firmware.current() == -1:
             self.write_in_log("Error: No firmware selected.")
             return
-        path = FIRMWARE_LIST[self.select_firmware.current()]["PATH"]
-        self.write_in_log("Starting firmware update...")
-        self.router.update(firmware_path=path)
+        
+        selected = FIRMWARE_LIST[self.select_firmware.current()]
+        current = self.router.get_firmware_version()
+
+        if self.router.is_router_updated(selected["Version"]):
+            self.write_in_log(f"Router firmware is up to date. No update needed.")
+            self.write_in_log(f"Current firmware: {current}")
+            return
+
+        self.write_in_log(f"Current firmware: {current}")
+        self.write_in_log(f"Updating to: {selected["Version"]}. Please wait...")
+        self.router.update(firmware_path=selected["PATH"])
 
 
     def button_for_updating_isp(self):
