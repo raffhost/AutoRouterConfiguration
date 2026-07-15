@@ -22,7 +22,7 @@ class App(tk.Tk):
         super().__init__()
         self.title("ARCTIC")
         self.geometry("1080x720")
-        self.resizable(False, False)
+        # self.resizable(False, False)
         self.router = router
         self.status_light = "✲"
 
@@ -54,6 +54,38 @@ class App(tk.Tk):
 
         self.cut_vertikal = ttk.Separator(master=self, orient="vertical")
         self.cut_vertikal.place(relx=0.56, rely=0, relheight=1, anchor="ne")
+
+
+
+
+
+
+    def menu(self):
+        self.main_menu = tk.Menu(
+            master=self,
+            bg= "red"
+        )
+        self.config(menu=self.main_menu)
+
+        self.settings_menu = tk.Menu(master=self.main_menu)
+        self.main_menu.add_cascade(
+            label="Settings",
+            menu=self.settings_menu
+        )
+        self.settings_menu.add_command(label="Language")
+        self.settings_menu.add_command(label="Thema")
+
+        self.help_menu = tk.Menu(master=self.main_menu)
+        self.main_menu.add_cascade(
+            label="Help",
+            menu=self.help_menu       
+        )
+        self.help_menu.add_command(label="Help")
+        self.help_menu.add_command(label="About")
+
+
+
+
 
 
     def name_label(self):
@@ -479,6 +511,8 @@ class App(tk.Tk):
 
     def start(self):
         self.screen_separation()
+        self.menu()
+
         self.name_label()
 
         self.firmware_selection()
