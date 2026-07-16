@@ -337,6 +337,7 @@ class App(tk.Tk):
         if not self.router.is_connected():
             self.log_queue.put("Error: Not connected. Press Connect first.")
             return
+        
         if self.select_firmware.current() == -1:
             self.log_queue.put("Error: No firmware selected.")
             return
@@ -376,10 +377,12 @@ class App(tk.Tk):
         if not self.router.is_connected():
             self.log_queue.put("Error: Not connected. Press Connect first.")
             return
+        
         isp = self.select_isp.get().strip()
         if not isp:
             self.log_queue.put("Error: No ISP profile selected.")
             return
+        
         self.log_queue.put(f"Applying ISP profile: {isp}...")
         self.router.change_isp(
             isp=isp,
@@ -406,6 +409,7 @@ class App(tk.Tk):
         if not self.router.is_connected():
             self.log_queue.put("Error: Not connected. Press Connect first.")
             return
+
         apn = self.select_apn.get().strip()
         if not apn:
             self.log_queue.put("Error: No APN selected or entered.")
@@ -435,9 +439,11 @@ class App(tk.Tk):
     def _on_connect(self):
         ip = self.router_ip.get().strip()
         password = self.default_password.get().strip()
+        
         if not ip:
             self.log_queue.put("Error: Router IP is empty.")
             return
+        
         if not password:
             self.log_queue.put("Error: Default password is empty.")
             return
@@ -468,6 +474,7 @@ class App(tk.Tk):
         if not self.router.is_connected():
             self.log_queue.put("Error: Not connected. Press Connect first.")
             return
+        
         password = self.new_password.get().strip()
         if not password:
             self.log_queue.put("Error: New password is empty.")
@@ -475,6 +482,31 @@ class App(tk.Tk):
         
         self.router.change_password(
             new_password=password,
+            log=self.log_queue.put
+        )
+
+
+
+
+
+
+    def button_for_router_restart(self):
+        self.change_password_button = tk.Button(
+            master=self,
+            text="Change PW",
+            font=("Arial", 20),
+            bg="#CCCCCC",
+            command=self._on_router_restart
+        )
+        self.change_password_button.place(relx=0.675, rely=0.927, relwidth=0.275, relheight=0.051)
+
+    
+    def _on_router_restart(self):
+        if not self.router.is_router_active():
+            self.log_queue.put("Error: No active router.\nSwitch it on first and connect it to the LAN Port.")
+            return
+        
+        self.router.save_and_restart_network(
             log=self.log_queue.put
         )
 
@@ -553,4 +585,4 @@ if __name__ == "__main__":
     app.start()
 
 
-# NOT FINISHED
+# Version 1 - FINISHED
