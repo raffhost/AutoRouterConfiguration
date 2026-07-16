@@ -5,6 +5,7 @@ from tooltip import Tooltip
 from router import Router
 import threading
 import json
+import queue
 
 
 # Firmware, ISP and APN
@@ -32,6 +33,33 @@ class App(tk.Tk):
         self._prev_updated_state = None
         self._prev_ip = None
 
+        # Create queue for multiple threading (safe) at the same time
+        self.log_queue = queue.Queue()
+        self.gui_queue = queue.Queue()
+        self.after(100, self._process_queues)
+
+
+    def run_in_thread(self, func, *args):
+        threading.Thread(target=func, args=args, daemon=True).start()
+
+
+    def _process_queues(self):
+        # Queue for logs
+        while not self.log_queue.empty():
+            message = self.log_queue.get_nowait()
+            self.write_in_log_chat(message)
+
+        # Queue for GUI
+        while not self.gui_queue.empty():
+            func = self.gui_queue.get_nowait()
+            func()
+        
+        self.after(100, self._process_queues)
+
+
+
+
+
 
     def create_help_label(self, relx, rely, text="?", font=("Arial", 16), fg="gray"):
         label = tk.Label(master=self, text=text, font=font, fg=fg)
@@ -54,34 +82,6 @@ class App(tk.Tk):
 
         self.cut_vertikal = ttk.Separator(master=self, orient="vertical")
         self.cut_vertikal.place(relx=0.56, rely=0, relheight=1, anchor="ne")
-
-
-
-
-
-
-    def menu(self):
-        self.main_menu = tk.Menu(
-            master=self,
-            bg= "red"
-        )
-        self.config(menu=self.main_menu)
-
-        self.settings_menu = tk.Menu(master=self.main_menu)
-        self.main_menu.add_cascade(
-            label="Settings",
-            menu=self.settings_menu
-        )
-        self.settings_menu.add_command(label="Language")
-        self.settings_menu.add_command(label="Thema")
-
-        self.help_menu = tk.Menu(master=self.main_menu)
-        self.main_menu.add_cascade(
-            label="Help",
-            menu=self.help_menu       
-        )
-        self.help_menu.add_command(label="Help")
-        self.help_menu.add_command(label="About")
 
 
 
@@ -118,7 +118,7 @@ class App(tk.Tk):
 
 
     def refresh_active(self):
-        threading.Thread(target=self._check_active, daemon=True).start()
+        self.run_in_thread(self._check_active)
         self.after(2000, self.refresh_active)
 
 
@@ -128,17 +128,21 @@ class App(tk.Tk):
 
         if current_ip != self._prev_ip:
             self._prev_ip = current_ip
-            self.write_in_log(f"Searching for router on {current_ip}...")
+            self.log_queue.put(f"Searching for router on {current_ip}...")
 
         if current_state != self._prev_active_state:
+            
             if current_state:
-                self.active_indicator.config(fg="green")
-                self.write_in_log(f"Found a router on {current_ip}")
+                self.gui_queue.put(lambda: self.active_indicator.config(fg="green"))
+                self.log_queue.put(f"Found a router on {current_ip}")
+
             elif self._prev_active_state != None:
-                self.active_indicator.config(fg="red")
-                self.write_in_log(f"Lost a router on {self._prev_ip}")
-            else:
-                self.active_indicator.config(fg="red")
+                self.gui_queue.put(lambda: self.active_indicator.config(fg="red"))
+                self.log_queue.put(f"Lost a router on {self._prev_ip}")
+
+            else: # Will be used 1 time only, after starting programm
+                self.gui_queue.put(lambda: self.active_indicator.config(fg="red"))
+
             self._prev_active_state = current_state
 
 
@@ -331,25 +335,25 @@ class App(tk.Tk):
 
     def _on_firmware_update(self):
         if not self.router.is_connected():
-            self.write_in_log("Error: Not connected. Press Connect first.")
+            self.log_queue.put("Error: Not connected. Press Connect first.")
             return
         if self.select_firmware.current() == -1:
-            self.write_in_log("Error: No firmware selected.")
+            self.log_queue.put("Error: No firmware selected.")
             return
         
         selected = FIRMWARE_LIST[self.select_firmware.current()]
         current = self.router.get_firmware_version()
 
         if self.router.is_router_updated(selected["Version"]):
-            self.write_in_log(f"Router firmware is up to date. No update needed.")
-            self.write_in_log(f"Current firmware: {current}")
+            self.log_queue.put(f"Router firmware is up to date. No update needed.")
+            self.log_queue.put(f"Current firmware: {current}")
             return
 
-        self.write_in_log(f"Current firmware: {current}")
-        self.write_in_log(f"Updating to: {selected["Version"]}. Please wait...")
+        self.log_queue.put(f"Current firmware: {current}")
+        self.log_queue.put(f"Updating to: {selected["Version"]}. Please wait...")
         self.router.update(
             firmware_path=selected["PATH"],
-            log=self.write_in_log
+            log=self.log_queue.put
         )
 
 
@@ -370,16 +374,16 @@ class App(tk.Tk):
 
     def _on_change_isp(self):
         if not self.router.is_connected():
-            self.write_in_log("Error: Not connected. Press Connect first.")
+            self.log_queue.put("Error: Not connected. Press Connect first.")
             return
         isp = self.select_isp.get().strip()
         if not isp:
-            self.write_in_log("Error: No ISP profile selected.")
+            self.log_queue.put("Error: No ISP profile selected.")
             return
-        self.write_in_log(f"Applying ISP profile: {isp}...")
+        self.log_queue.put(f"Applying ISP profile: {isp}...")
         self.router.change_isp(
             isp=isp,
-            log=self.write_in_log
+            log=self.log_queue.put
         )
 
 
@@ -400,16 +404,16 @@ class App(tk.Tk):
 
     def _on_change_apn(self):
         if not self.router.is_connected():
-            self.write_in_log("Error: Not connected. Press Connect first.")
+            self.log_queue.put("Error: Not connected. Press Connect first.")
             return
         apn = self.select_apn.get().strip()
         if not apn:
-            self.write_in_log("Error: No APN selected or entered.")
+            self.log_queue.put("Error: No APN selected or entered.")
             return
 
         self.router.change_apn(
             apn=apn,
-            log=self.write_in_log
+            log=self.log_queue.put
         )
 
 
@@ -432,16 +436,16 @@ class App(tk.Tk):
         ip = self.router_ip.get().strip()
         password = self.default_password.get().strip()
         if not ip:
-            self.write_in_log("Error: Router IP is empty.")
+            self.log_queue.put("Error: Router IP is empty.")
             return
         if not password:
-            self.write_in_log("Error: Default password is empty.")
+            self.log_queue.put("Error: Default password is empty.")
             return
 
         self.router.connect(
             ip=ip,
             default_password=password,
-            log=self.write_in_log
+            log=self.log_queue.put
         )
 
 
@@ -462,16 +466,16 @@ class App(tk.Tk):
 
     def _on_change_password(self):
         if not self.router.is_connected():
-            self.write_in_log("Error: Not connected. Press Connect first.")
+            self.log_queue.put("Error: Not connected. Press Connect first.")
             return
         password = self.new_password.get().strip()
         if not password:
-            self.write_in_log("Error: New password is empty.")
+            self.log_queue.put("Error: New password is empty.")
             return
         
         self.router.change_password(
             new_password=password,
-            log=self.write_in_log
+            log=self.log_queue.put
         )
 
 
@@ -479,30 +483,30 @@ class App(tk.Tk):
 
 
 
-    def log(self):
-        self.log_frame = tk.Frame(master=self)
-        self.log_frame.place(relx=0.558, rely=0.597, relwidth=0.44, relheight=0.30)
+    def log_chat(self):
+        self.log_chat_frame = tk.Frame(master=self)
+        self.log_chat_frame.place(relx=0.558, rely=0.597, relwidth=0.44, relheight=0.30)
 
-        self.log_scrollbar = tk.Scrollbar(master=self.log_frame)
-        self.log_scrollbar.pack(side="right", fill="y")
+        self.log_chat_scrollbar = tk.Scrollbar(master=self.log_chat_frame)
+        self.log_chat_scrollbar.pack(side="right", fill="y")
 
-        self.log_box = tk.Text(
-            master=self.log_frame,
+        self.log_chat_box = tk.Text(
+            master=self.log_chat_frame,
             font=("Arial", 9),
             state="disabled",
             wrap="word",
-            yscrollcommand=self.log_scrollbar.set
+            yscrollcommand=self.log_chat_scrollbar.set
         )
-        self.log_box.pack(fill="both", expand=True)
-        self.log_scrollbar.config(command=self.log_box.yview)
+        self.log_chat_box.pack(fill="both", expand=True)
+        self.log_chat_scrollbar.config(command=self.log_chat_box.yview)
 
 
-    def write_in_log(self, message):
+    def write_in_log_chat(self, message):
         time = datetime.now().strftime("%H:%M:%S")
-        self.log_box.config(state="normal")
-        self.log_box.insert("end", f"[{time}] {message}\n")
-        self.log_box.see("end")
-        self.log_box.config(state="disabled")
+        self.log_chat_box.config(state="normal")
+        self.log_chat_box.insert("end", f"[{time}] {message}\n")
+        self.log_chat_box.see("end")
+        self.log_chat_box.config(state="disabled")
 
 
 
@@ -511,7 +515,6 @@ class App(tk.Tk):
 
     def start(self):
         self.screen_separation()
-        self.menu()
 
         self.name_label()
 
@@ -523,8 +526,8 @@ class App(tk.Tk):
         self.default_password_entry()
         self.router_ip_entry()
 
-        self.log()
-        self.write_in_log(
+        self.log_chat()
+        self.log_queue.put(
             "Application started. Welcome to ARCTIC!"
         )
 

@@ -15,40 +15,47 @@ class Router():
         return stdout.read().decode()
 
 
+    def run_in_thread(self, func, *args):
+        threading.Thread(target=func, args=args, daemon=True).start()
+
+
 
 
 
 
     def connect(self, ip="192.168.1.1", user="root", default_password="admin01", log=None):
-        thread = threading.Thread(
-            target=self._connect_process,
-            args=(ip, user, default_password, log)
-        )
-        thread.daemon = True
-        thread.start()
-
-    def _connect_process(self, ip, user, default_password, log=None):
-        try:
-            # Trying to connect to router
-            self.client.connect(hostname=ip, username=user, password=default_password)
-            if log:
-                log(f"Successfully connected to {ip}.")
-        except Exception as e:
-            if log:
-                log(f"Connection failed: {e}")
-
-
-
-
+        self.run_in_thread(self._connect_process, ip, user, default_password, log)
 
 
     def update(self, firmware_path, log=None):
-        thread = threading.Thread(
-            target=self._update_process,
-            args=(firmware_path, log)
-        )
-        thread.daemon = True
-        thread.start()
+        self.run_in_thread(self._update_process, firmware_path, log)
+
+
+    def change_password(self, new_password, log=None):
+        self.run_in_thread(self._change_password_process, new_password, log)
+
+
+    def change_isp(self, isp, log=None):
+        self.run_in_thread(self._change_isp_process, isp, log)
+
+
+    def change_apn(self, apn, log=None):
+        self.run_in_thread(self._change_apn_process, apn, log)
+
+
+
+
+
+
+    def _connect_process(self, ip, user, default_password, log=None):
+        try:
+            self.client.connect(hostname=ip, username=user, password=default_password)
+            if log:
+                log(f"Successfully connected to {ip}.")
+        except Exception:
+            if log:
+                log(f"Connection failed: {Exception}")
+
 
     def _update_process(self, firmware_path, log=None):
         # Copy firmware to router /tmp/
@@ -64,33 +71,10 @@ class Router():
             time.sleep(3)
             log("Waiting for router to reboot...")
         
-        # Auto reconnect with default password
-        time.sleep(5)
-        self._reconnect()
-        if log:
-            log("Router is back online after update!")
+        # # Auto reconnect with default password
+        # if log:
+        #     log("Router is back online after update!")
 
-
-    def _reconnect(self, default_password="admin01"):
-        while True:
-            try:
-                self.connect(default_password=default_password)
-                break
-            except:
-                time.sleep(3)
-
-
-
-
-
-
-    def change_password(self, new_password, log=None):
-        thread = threading.Thread(
-            target=self._change_password_process,
-            args=(new_password, log)
-        )
-        thread.daemon = True
-        thread.start()
 
     def _change_password_process(self, new_password, log=None):
         # Change root password on router
@@ -101,18 +85,6 @@ class Router():
             log("Password changed successfully.")
 
 
-
-
-
-
-    def change_isp(self, isp, log=None):
-        thread = threading.Thread(
-            target=self._change_isp_process,
-            args=(isp, log)
-        )
-        thread.daemon = True
-        thread.start()
-
     def _change_isp_process(self, isp, log=None):
         # Apply ISP profile — changes IP and APN automatically
         if log:
@@ -121,18 +93,6 @@ class Router():
         if log:
             log(f"{isp} profile applied. Router IP have changed.")
 
-
-
-
-
-
-    def change_apn(self, apn, log=None):
-        thread = threading.Thread(
-            target=self._change_apn_process,
-            args=(apn, log)
-        )
-        thread.daemon = True
-        thread.start()
 
     def _change_apn_process(self, apn, log=None):
         # Set APN and restart network interface
@@ -176,7 +136,7 @@ class Router():
 
 
     def get_firmware_version(self):
-        return self.run_command("cat /etc/version").strip()  # "RUT2_R_GPL_00.07.06.19"
+        return self.run_command("cat /etc/version").strip()  
 
 
     def show_network(self):
