@@ -505,12 +505,12 @@ class App(tk.Tk):
     def button_for_router_restart(self):
         self.router_restart_button = tk.Button(
             master=self,
-            text="Reboot",
+            text="NETRestart",
             font=("Arial", 20),
             bg="#CCCCCC",
             command=self._on_router_restart
         )
-        self.router_restart_button.place(relx=0.675, rely=0.927, relwidth=0.275, relheight=0.051)
+        self.router_restart_button.place(relx=0.600, rely=0.927, relwidth=0.150, relheight=0.051)
 
     
     def _on_router_restart(self):
@@ -522,6 +522,26 @@ class App(tk.Tk):
             log=self.log_queue.put
         )
 
+
+    def button_for_router_reboot(self):
+        self.router_reboot_button = tk.Button(
+            master=self,
+            text="Reboot",
+            font=("Arial", 20),
+            bg="#CCCCCC",
+            command=self._on_router_reboot
+        )
+        self.router_reboot_button.place(relx=0.800, rely=0.927, relwidth=0.150, relheight=0.051)
+
+    
+    def _on_router_reboot(self):
+        if not self.router.is_router_active():
+            self.log_queue.put("Error: No active router.\nSwitch it on first and connect it to the LAN Port.")
+            return
+        
+        self.router.reboot(
+            log=self.log_queue.put
+        )        
 
 
 
@@ -583,6 +603,7 @@ class App(tk.Tk):
         self.button_for_updating_isp()
         self.button_for_updating_apn()
         self.button_for_router_restart()
+        self.button_for_router_reboot()
 
         self.mainloop()
 
