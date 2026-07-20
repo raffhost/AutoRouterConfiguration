@@ -19,12 +19,12 @@ APN_LIST = data["APN_LIST"]
 
 
 class App(tk.Tk):
-    def __init__(self, router=Router):
+    def __init__(self, router: Router | None = None):
         super().__init__()
         self.title("ARCTIC")
         self.geometry("1080x720")
         # self.resizable(False, False)
-        self.router = router
+        self.router = router if router is not None else Router()
         self.status_light = "✲"
 
         # Track previous states to log only on change
@@ -383,7 +383,14 @@ class App(tk.Tk):
             self.log_queue.put("Error: No ISP profile selected.")
             return
         
-        self.log_queue.put(f"Applying ISP profile: {isp}...")
+        if self.router.is_isp_changed(isp):
+            self.log_queue.put(f"ISP is up to date. No update needed.")
+            self.log_queue.put(f"Current ISP: {isp}")
+            return
+        
+        profile = ISP_PROFILE_LIST[self.select_isp.current()]
+        self.router_ip.delete(0, "end")
+        self.router_ip.insert(0, profile["IP"])
         self.router.change_isp(
             isp=isp,
             log=self.log_queue.put
@@ -413,6 +420,11 @@ class App(tk.Tk):
         apn = self.select_apn.get().strip()
         if not apn:
             self.log_queue.put("Error: No APN selected or entered.")
+            return
+
+        if self.router.is_apn_changed(apn):
+            self.log_queue.put(f"APN is already correct. No changing needed.")
+            self.log_queue.put(f"Current APN: {apn}")
             return
 
         self.router.change_apn(
@@ -491,14 +503,14 @@ class App(tk.Tk):
 
 
     def button_for_router_restart(self):
-        self.change_password_button = tk.Button(
+        self.router_restart_button = tk.Button(
             master=self,
-            text="Change PW",
+            text="Reboot",
             font=("Arial", 20),
             bg="#CCCCCC",
             command=self._on_router_restart
         )
-        self.change_password_button.place(relx=0.675, rely=0.927, relwidth=0.275, relheight=0.051)
+        self.router_restart_button.place(relx=0.675, rely=0.927, relwidth=0.275, relheight=0.051)
 
     
     def _on_router_restart(self):
@@ -567,10 +579,10 @@ class App(tk.Tk):
 
         self.button_for_connection()
         self.button_for_password_changing()
-
         self.button_for_updating_firmware()
         self.button_for_updating_isp()
         self.button_for_updating_apn()
+        self.button_for_router_restart()
 
         self.mainloop()
 
