@@ -7,7 +7,7 @@ NEW_PASSWORD_LABEL = "New password:"
 DEFAULT_PASSWORD_LABEL = "Def password:"
 ROUTER_IP_LABEL = "Router IP:"
 FIRMWARE_LABEL = "Select Firmware:"
-ISP_LABE = "Select ISP"
+ISP_LABEL = "Select ISP"
 APN_LABEL = "Select APN"
 
 #----------------------
