@@ -191,6 +191,7 @@ class Router():
 
 
 
+
     def save_changes(self, log=None):
         if log:
             log("Saving changes...")
@@ -202,12 +203,6 @@ class Router():
             log("Network restarting...")
         # PROTECTED: Detached call since network restart kills current routing/IP assignment
         self._run_detached("/etc/init.d/network restart")
-
-    
-    def do_reboot(self):
-        # PROTECTED: Kept as standard method but shifted to detached shell run to avoid dead socket lockups
-        self._run_detached("reboot")
-        self.disconnect()
 
 
     def save_and_restart_network(self, log=None):
