@@ -17,9 +17,18 @@ class Router():
         threading.Thread(target=self._queue, daemon=True).start()
 
 
-    def run_command(self, command):
+    def run_command(self, command) -> str:
         _, stdout, _ = self.client.exec_command(command)
         return stdout.read().decode()
+
+
+    def _run_detached(self, command):
+        # Protected execution: fires command and instantly closes channel
+        # This prevents Paramiko from hanging when connection drops
+        transport = self.client.get_transport()
+        if transport and transport.is_active():
+            channel = transport.open_session()
+            channel.exec_command(command)
 
 
     def add_to_queue(self, func, *args, **kwargs):
@@ -61,13 +70,21 @@ class Router():
         self.add_to_queue(self._change_apn_process, apn, log)
 
 
+    def reboot(self, log=None):
+        self.add_to_queue(self._reboot_process, log)
+
+
 
 
 
 
     def _connect_process(self, ip, user, default_password, log=None):
         try:
-            self.client.connect(hostname=ip, username=user, password=default_password)
+            self.client.connect(
+                hostname=ip, username=user, 
+                password=default_password,
+                timeout=3, banner_timeout=3
+            )
             if log:
                 log(f"Successfully connected to {ip}.")
         except Exception as e:
@@ -83,11 +100,13 @@ class Router():
         sftp.close()
 
         # Start update (-n = without saving last settings)
-        self.run_command("sysupgrade -n /tmp/firmware.bin")
+        # PROTECTED: Handled via detached execution to avoid connection drop socket crash
+        self._run_detached("nohup sysupgrade -n /tmp/firmware.bin > /dev/null 2>&1 &")
         if log:
             log("Flashing firmware... Router will reboot.")
             time.sleep(3)
             log("Waiting for router to reboot...")
+        self.disconnect()
 
 
     def _change_password_process(self, new_password, log=None):
@@ -104,15 +123,14 @@ class Router():
         # Apply ISP profile — changes IP and APN automatically
         isp = isp.strip().upper().replace(" ", "")
         if log:
-            log(f"Applying {isp} profile...")
-        self.run_command(f"profile.sh -c {isp}")
-        self.save_changes()
+            log(f"Applying {isp} profile..." \
+                "\nRouter IP will change after restart."
+            )
+        # PROTECTED: Detached call since profiles frequently restart networking stack
+        self._run_detached(f"profile.sh -c {isp}")
 
         if log:
-            log(f"{isp} profile applied." \
-                "\nRouter IP will change after restart." \
-                "\nPress the restart button to save changes"
-            )
+            log(f"{isp} profile applied.")
 
 
     def _change_apn_process(self, apn, log=None):
@@ -120,18 +138,25 @@ class Router():
         if log:
             log(f"Setting APN to {apn}...")
         self.run_command(f"uci set network.mob1s1a1.auto_apn='0'")
-        self.run_command(f"uci set network.mob1s1a1.apn={apn}")
-        self.save_changes()
+        self.run_command(f"uci set network.mob1s1a1.apn='{apn}'")
+        self.save_and_restart_network(log=log)
 
+
+    def _reboot_process(self, log=None):
         if log:
-            log(f"APN set to {apn}.\nPress the restart button to save changes")
+            log("Sending reboot command to the router...")
+        # PROTECTED: Fired via detached call so code doesn't freeze waiting for an dead connection
+        self._run_detached("reboot")
+        self.disconnect()
+        if log:
+            log("Router is rebooting. SSH connection closed.")
 
 
 
 
 
 
-    def is_router_active(self, ip="192.168.1.1"):
+    def is_router_active(self, ip="192.168.1.1") -> bool:
         try:
             sock = socket.create_connection((ip, 22), timeout=1)
             sock.close()
@@ -140,7 +165,7 @@ class Router():
             return False
 
 
-    def is_connected(self):
+    def is_connected(self) -> bool:
         try:
             result = self.run_command("echo ok")
             return result.strip() == "ok"
@@ -148,17 +173,19 @@ class Router():
             return False
 
 
-    def is_router_updated(self, given_version):
-        current = self.get_firmware_version().strip()  # "RUT2_R_GPL_00.07.06.19"
-        return current == given_version
+    def is_router_updated(self, given_version) -> bool:
+        current_firmware = self.get_firmware_version().strip()  # "RUT2_R_GPL_00.07.06.19"
+        return current_firmware == given_version # return True if correct
     
 
-    def is_isp_changed(self):
-        try:
-            self.run_command("")
-            return True
-        except:
-            return False
+    def is_isp_changed(self, given_isp) -> bool:
+        current_isp = self.run_command("uci get profiles.general.profile").strip().upper().replace(" ", "")
+        return current_isp == given_isp
+
+
+    def is_apn_changed(self, given_apn) -> bool:
+        current_apn = self.run_command("uci get network.mob1s1a1.apn").strip()
+        return current_apn == given_apn
 
 
 
@@ -173,26 +200,35 @@ class Router():
     def restart_network(self, log=None):
         if log:
             log("Network restarting...")
-        self.run_command("/etc/init.d/network restart")
+        # PROTECTED: Detached call since network restart kills current routing/IP assignment
+        self._run_detached("/etc/init.d/network restart")
+
+    
+    def do_reboot(self):
+        # PROTECTED: Kept as standard method but shifted to detached shell run to avoid dead socket lockups
+        self._run_detached("reboot")
+        self.disconnect()
 
 
-    def get_firmware_version(self):
+    def save_and_restart_network(self, log=None):
+        self.save_changes(log=log)
+        self.restart_network(log=log)
+
+
+    def get_firmware_version(self) -> str:
         return self.run_command("cat /etc/version").strip()  
 
 
-    def show_network(self):
+    def show_network(self) -> str:
         return self.run_command("uci show network")
 
 
-    def show_system(self):
+    def show_system(self) -> str:
         return self.run_command("uci show system")
 
 
     def disconnect(self):
-        self.client.close()
-
-
-# router = Router()
-# router.connect()
-# time.sleep(2)
-# print(router.show_network())
+        try:
+            self.client.close()
+        except:
+            pass
