@@ -156,9 +156,9 @@ class App(tk.Tk):
             text="Select firmware",
             font=("Arial", 20)
         )
-        self.firmware_label.place(relx=0.01, rely=0.175)
+        self.firmware_label.place(relx=0.01, rely=0.62)
 
-        self.firmware_selection_help = self.create_help_label(relx=0.485, rely=0.18)
+        self.firmware_selection_help = self.create_help_label(relx=0.485, rely=0.625)
         Tooltip(
             widget=self.firmware_selection_help,
             text="Select the firmware version for your router model." \
@@ -172,7 +172,7 @@ class App(tk.Tk):
             values=firmware_list,
             font=("Arial", 20)
         )
-        self.select_firmware.place(relx=0.225, rely=0.175, relwidth=0.25)
+        self.select_firmware.place(relx=0.225, rely=0.62, relwidth=0.25)
 
 
     def isp_selection(self):
@@ -181,9 +181,9 @@ class App(tk.Tk):
             text="Select ISP profile",
             font=("Arial", 20)
         )
-        self.isp_label.place(relx=0.01, rely=0.275)
+        self.isp_label.place(relx=0.01, rely=0.72)
 
-        self.isp_help = self.create_help_label(relx=0.485, rely=0.28)
+        self.isp_help = self.create_help_label(relx=0.485, rely=0.725)
         Tooltip(
             widget=self.isp_help,
             text="Select the ISP profile for this router." \
@@ -197,7 +197,7 @@ class App(tk.Tk):
             values=isp_list,
             font=("Arial", 20)
         )
-        self.select_isp.place(relx=0.225, rely=0.275, relwidth=0.25)
+        self.select_isp.place(relx=0.225, rely=0.72, relwidth=0.25)
         
         self.select_isp.bind("<<ButtonPress>>", self.update_ip)
 
@@ -208,9 +208,9 @@ class App(tk.Tk):
             text="Select APN",
             font=("Arial", 20)
         )
-        self.apn_label.place(relx=0.01, rely=0.375)
+        self.apn_label.place(relx=0.01, rely=0.82)
 
-        self.apn_help = self.create_help_label(relx=0.485, rely=0.38)
+        self.apn_help = self.create_help_label(relx=0.485, rely=0.825)
         Tooltip(
             widget=self.apn_help,
             text="APN (Access Point Name) is required for mobile data." \
@@ -224,7 +224,7 @@ class App(tk.Tk):
             values=apn_list,
             font=("Arial", 20)
             )
-        self.select_apn.place(relx=0.225, rely=0.375, relwidth=0.25)
+        self.select_apn.place(relx=0.225, rely=0.82, relwidth=0.25)
 
 
 
@@ -237,7 +237,7 @@ class App(tk.Tk):
             text="New password",
             font=("Arial", 20)
         )
-        self.new_password_label.place(relx=0.01, rely=0.62)
+        self.new_password_label.place(relx=0.01, rely=0.275)
 
         new_pw_list=["admin01", "Start2026!"]
         self.new_password = ttk.Combobox(
@@ -246,9 +246,9 @@ class App(tk.Tk):
             font=("Arial", 20)
         )
         self.new_password.insert(0, "admin01")
-        self.new_password.place(relx=0.22, rely=0.62, relwidth=0.25)
+        self.new_password.place(relx=0.22, rely=0.275, relwidth=0.25)
 
-        self.new_password_help = self.create_help_label(relx=0.485, rely=0.625)
+        self.new_password_help = self.create_help_label(relx=0.485, rely=0.28)
         Tooltip(
             widget=self.new_password_help,
             text="The new password that will be set on the router." \
@@ -263,7 +263,7 @@ class App(tk.Tk):
             text="Default password",
             font=("Arial", 20)
         )
-        self.default_password_label.place(relx=0.01, rely=0.72)
+        self.default_password_label.place(relx=0.01, rely=0.375)
 
         def_pw_list=["admin01",]
         self.default_password = ttk.Combobox(
@@ -272,9 +272,9 @@ class App(tk.Tk):
             font=("Arial", 20)
         )
         self.default_password.insert(0, "admin01")
-        self.default_password.place(relx=0.22, rely=0.72, relwidth=0.25, )
+        self.default_password.place(relx=0.22, rely=0.375, relwidth=0.25, )
 
-        self.default_password_help = self.create_help_label(relx=0.485, rely=0.725)
+        self.default_password_help = self.create_help_label(relx=0.485, rely=0.38)
         Tooltip(
             widget=self.default_password_help,
             text="The current password on the router." \
@@ -293,7 +293,7 @@ class App(tk.Tk):
             text="Router IP",
             font=("Arial", 20)
         )
-        self.router_ip_label.place(relx=0.01, rely=0.82)
+        self.router_ip_label.place(relx=0.01, rely=0.175)
 
         ip_list = [item["IP"] for item in ISP_PROFILE_LIST]
         self.router_ip = ttk.Combobox(
@@ -302,9 +302,9 @@ class App(tk.Tk):
             font=("Arial", 20)
         )
         self.router_ip.insert(0, "192.168.1.1")
-        self.router_ip.place(relx=0.22, rely=0.82, relwidth=0.25)
+        self.router_ip.place(relx=0.22, rely=0.175, relwidth=0.25)
 
-        self.router_ip_help = self.create_help_label(relx=0.485, rely=0.825)
+        self.router_ip_help = self.create_help_label(relx=0.485, rely=0.18)
         Tooltip(
             widget=self.router_ip_help,
             text="The IP address of the router." \
@@ -330,7 +330,7 @@ class App(tk.Tk):
             bg="#CCCCCC",
             command=self._on_firmware_update
         )
-        self.update_button.place(relx=0.01, rely=0.5225, relwidth=0.125, relheight=0.051)
+        self.update_button.place(relx=0.01, rely=0.927, relwidth=0.125, relheight=0.051)
 
 
     def _on_firmware_update(self):
@@ -370,7 +370,7 @@ class App(tk.Tk):
             bg="#CCCCCC",
             command=self._on_change_isp
         )
-        self.isp_button.place(relx=0.16, rely=0.5225, relwidth=0.125, relheight=0.051)
+        self.isp_button.place(relx=0.16, rely=0.927, relwidth=0.125, relheight=0.051)
 
 
     def _on_change_isp(self):
@@ -409,7 +409,7 @@ class App(tk.Tk):
             bg="#CCCCCC",
             command=self._on_change_apn
         )
-        self.apn_button.place(relx=0.31, rely=0.5225, relwidth=0.125, relheight=0.051)
+        self.apn_button.place(relx=0.31, rely=0.927, relwidth=0.125, relheight=0.051)
 
 
     def _on_change_apn(self):
@@ -445,7 +445,7 @@ class App(tk.Tk):
             bg="#CCCCCC",
             command=self._on_connect
         )
-        self.connect_button.place(relx=0.01, rely=0.927, relwidth=0.125, relheight=0.051)
+        self.connect_button.place(relx=0.01, rely=0.5225, relwidth=0.125, relheight=0.051)
 
 
     def _on_connect(self):
@@ -479,7 +479,7 @@ class App(tk.Tk):
             bg="#CCCCCC",
             command=self._on_change_password
         )
-        self.change_password_button.place(relx=0.16, rely=0.927, relwidth=0.275, relheight=0.051)
+        self.change_password_button.place(relx=0.16, rely=0.5225, relwidth=0.275, relheight=0.051)
 
 
     def _on_change_password(self):
@@ -510,7 +510,7 @@ class App(tk.Tk):
             bg="#CCCCCC",
             command=self._on_router_restart
         )
-        self.router_restart_button.place(relx=0.600, rely=0.927, relwidth=0.150, relheight=0.051)
+        self.router_restart_button.place(relx=0.600, rely=0.5225, relwidth=0.150, relheight=0.051)
 
     
     def _on_router_restart(self):
@@ -531,7 +531,7 @@ class App(tk.Tk):
             bg="#CCCCCC",
             command=self._on_router_reboot
         )
-        self.router_reboot_button.place(relx=0.800, rely=0.927, relwidth=0.150, relheight=0.051)
+        self.router_reboot_button.place(relx=0.800, rely=0.5225, relwidth=0.150, relheight=0.051)
 
     
     def _on_router_reboot(self):
@@ -582,13 +582,13 @@ class App(tk.Tk):
 
         self.name_label()
 
+        self.router_ip_entry()
+        self.new_password_entry()
+        self.default_password_entry()
+
         self.firmware_selection()
         self.isp_selection()
         self.apn_selection()
-
-        self.new_password_entry()
-        self.default_password_entry()
-        self.router_ip_entry()
 
         self.log_chat()
         self.log_queue.put(
