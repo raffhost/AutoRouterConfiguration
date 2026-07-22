@@ -98,7 +98,7 @@ class Router():
             )
             if log: 
                 log(f"Successfully connected to {ip}.")
-                log(self.get_banner())
+                log(f"\n{self.get_banner()}")
         
         except Exception as e:
             if log: log(f"Connection failed: {e}")
