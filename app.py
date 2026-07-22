@@ -728,7 +728,7 @@ class App(tk.Tk):
 
         self.log_chat_box = tk.Text(
             master=self.log_chat_frame,
-            font=("Arial", 9),
+            font=("Consolas", 9),
             state="disabled",
             wrap="word",
             yscrollcommand=self.log_chat_scrollbar.set
