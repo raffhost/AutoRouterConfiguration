@@ -64,7 +64,7 @@ class Router():
 
 
 
-    def connect(self, ip="192.168.1.1", user="root", default_password="admin01", log=None):
+    def connect(self, ip="192.168.1.1", user="root", default_password="admin01", log=None, show_banner=False):
         self.add_to_queue(self._connect_process, ip, user, default_password, log)
 
 
@@ -92,7 +92,7 @@ class Router():
 
 
 
-    def _connect_process(self, ip, user, default_password, log=None):
+    def _connect_process(self, ip, user, default_password, log=None, show_banner=False):
         try:
             self.client.connect(
                 hostname=ip, username=user, 
@@ -101,7 +101,8 @@ class Router():
             )
             if log: 
                 log(f"Successfully connected to {ip}.")
-                log(f"\n{self.get_banner()}")
+                if show_banner:
+                    log(f"\n{self.get_banner()}")
         
         except Exception as e:
             if log: log(f"Connection failed: {e}")
@@ -184,18 +185,27 @@ class Router():
 
 
     def is_router_updated(self, given_version) -> bool:
-        current_firmware = self.get_firmware_version().strip()  # "RUT2_R_GPL_00.07.06.19"
-        return current_firmware == given_version # return True if correct
-    
+        try:
+            current_firmware = self.get_firmware_version().strip()  # "RUT2_R_GPL_00.07.06.19"
+            return current_firmware == given_version # return True if correct
+        except:
+            return False
+
 
     def is_isp_changed(self, given_isp) -> bool:
-        current_isp = self.run_command("uci get profiles.general.profile").strip().upper().replace(" ", "")
-        return current_isp == given_isp
+        try:
+            current_isp = self.run_command("uci get profiles.general.profile").strip().upper().replace(" ", "")
+            return current_isp == given_isp
+        except:
+            return False
 
 
     def is_apn_changed(self, given_apn) -> bool:
-        current_apn = self.run_command("uci get network.mob1s1a1.apn").strip()
-        return current_apn == given_apn
+        try:
+            current_apn = self.run_command("uci get network.mob1s1a1.apn").strip()
+            return current_apn == given_apn
+        except:
+            return False
 
 
 
