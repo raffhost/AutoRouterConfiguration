@@ -137,7 +137,8 @@ class App(tk.Tk):
 
         if current_ip != self._prev_ip:
             self._prev_ip = current_ip
-            self.router.disconnect()
+            if not self.router.threading_busy.is_set():
+                self.router.disconnect()
             self.log_queue.put(f"Searching for router on {current_ip}...")
 
         if current_state != self._prev_active_state:
@@ -478,12 +479,12 @@ class App(tk.Tk):
             text="Connect",
             font=("Arial", 20),
             bg="#CCCCCC",
-            command=self._on_connect
+            command=lambda: self._on_connect(show_banner=True)
         )
         self.connect_button.place(relx=0.01, rely=0.5225, relwidth=0.125, relheight=0.051)
 
 
-    def _on_connect(self) -> bool:
+    def _on_connect(self, show_banner=False) -> bool:
         ip = self.router_ip.get().strip()
         password = self.default_password.get().strip()
 
@@ -502,7 +503,8 @@ class App(tk.Tk):
         self.router.connect(
             ip=ip,
             default_password=password,
-            log=self.log_queue.put
+            log=self.log_queue.put, 
+            show_banner=show_banner   
         )
         return True
 
@@ -612,6 +614,7 @@ class App(tk.Tk):
         while self.router.threading_busy.is_set() or not check():
             if self.cancel_event.is_set():
                 raise InterruptedError(comment)
+            time.sleep(1)
 
 
     def button_for_auto_configuration(self):
@@ -638,17 +641,17 @@ class App(tk.Tk):
         self.gui_queue.put(self._show_cancel_button)
         
         steps = [ # label, func, check
-            ("--- 01/CONNECTION ---",
-             self._on_connect, 
+            ("01/CONNECTION",
+             lambda: self._on_connect(show_banner=True), 
              self.router.is_connected
             ),
-            ("--- 02/UPDATE ---",
+            ("02/UPDATE",
              self._on_firmware_update, 
              lambda: self.router.is_router_updated(
                  FIRMWARE_LIST[self.select_firmware.current()]['Version']
                 )
             ),
-            ("--- REBOOTING... WAIT ---",
+            ("REBOOTING... WAIT",
              lambda: None, 
              lambda: self.router.is_router_active(self.router_ip.get())
             ),
@@ -662,7 +665,7 @@ class App(tk.Tk):
             ),
             ("04/ISP",
              self._on_change_isp, 
-             lambda: self.router.is_isp_changed(self.select_isp.get().strip())
+             lambda: not self.router.is_connected()
             ),
             ("RE-CONNECTION",
              self._on_connect, 
@@ -670,7 +673,7 @@ class App(tk.Tk):
             ),
             ("05/APN",
              self._on_change_apn, 
-             lambda: self.router.is_apn_changed(self.select_apn.get().strip())
+             lambda: not self.router.is_connected()
             ),
             ("06/NETRestart",
              self._on_router_restart, 
@@ -681,7 +684,7 @@ class App(tk.Tk):
              lambda: self.router.is_router_active(self.router_ip.get())
             ),
             ("RE-CONNECTION",
-             self._on_connect, 
+             lambda: self._on_connect(show_banner=True), 
              self.router.is_connected
             ),
         ]
@@ -804,4 +807,4 @@ if __name__ == "__main__":
     app.start()
 
 
-# Version 1 - FINISHED
+# Version 1 - NOT FINISHED
