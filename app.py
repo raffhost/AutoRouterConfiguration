@@ -137,6 +137,7 @@ class App(tk.Tk):
 
         if current_ip != self._prev_ip:
             self._prev_ip = current_ip
+            self.router.disconnect()
             self.log_queue.put(f"Searching for router on {current_ip}...")
 
         if current_state != self._prev_active_state:
@@ -345,6 +346,11 @@ class App(tk.Tk):
 
 
     def _on_firmware_update(self):
+        ip=self.router_ip.get().strip()
+        if not self.router.is_router_active(ip):
+            self.log_queue.put("Error: No active router.\nTurn it on first/change router IP.")
+            return False
+        
         if not self.router.is_connected():
             self.log_queue.put("Error: Not connected. Press Connect first.")
             return False
@@ -395,6 +401,11 @@ class App(tk.Tk):
 
 
     def _on_change_isp(self):
+        ip=self.router_ip.get().strip()
+        if not self.router.is_router_active(ip):
+            self.log_queue.put("Error: No active router.\nTurn it on first/change router IP.")
+            return False
+        
         if not self.router.is_connected():
             self.log_queue.put("Error: Not connected. Press Connect first.")
             return False
@@ -433,6 +444,11 @@ class App(tk.Tk):
 
 
     def _on_change_apn(self) -> bool:
+        ip=self.router_ip.get().strip()
+        if not self.router.is_router_active(ip):
+            self.log_queue.put("Error: No active router.\nTurn it on first/change router IP.")
+            return False
+        
         if not self.router.is_connected():
             self.log_queue.put("Error: Not connected. Press Connect first.")
             return False
@@ -470,7 +486,11 @@ class App(tk.Tk):
     def _on_connect(self) -> bool:
         ip = self.router_ip.get().strip()
         password = self.default_password.get().strip()
-        
+
+        if not self.router.is_router_active(ip):
+            self.log_queue.put("Error: No active router.\nTurn it on first/Change router IP.")
+            return False
+            
         if not ip:
             self.log_queue.put("Error: Router IP is empty.")
             return False
@@ -501,6 +521,11 @@ class App(tk.Tk):
 
 
     def _on_change_password(self) -> bool:
+        ip=self.router_ip.get().strip()
+        if not self.router.is_router_active(ip):
+            self.log_queue.put("Error: No active router.\nTurn it on first/Change router IP.")
+            return False
+
         if not self.router.is_connected():
             self.log_queue.put("Error: Not connected. Press Connect first.")
             return False
@@ -533,8 +558,13 @@ class App(tk.Tk):
 
     
     def _on_router_restart(self) -> bool:
-        if not self.router.is_router_active():
-            self.log_queue.put("Error: No active router.\nSwitch it on first and connect it to the LAN Port.")
+        ip=self.router_ip.get().strip()
+        if not self.router.is_router_active(ip):
+            self.log_queue.put("Error: No active router.\nTurn it on first/Change router IP.")
+            return False
+
+        if not self.router.is_connected():
+            self.log_queue.put("Error: Not connected. Press Connect first.")
             return False
         
         self.router.save_and_restart_network(
@@ -555,8 +585,13 @@ class App(tk.Tk):
 
     
     def _on_router_reboot(self) -> bool:
-        if not self.router.is_router_active():
-            self.log_queue.put("Error: No active router.\nSwitch it on first and connect it to the LAN Port.")
+        ip=self.router_ip.get().strip()
+        if not self.router.is_router_active(ip):
+            self.log_queue.put("Error: No active router.\nTurn it on first/Change router IP.")
+            return False
+
+        if not self.router.is_connected():
+            self.log_queue.put("Error: Not connected. Press Connect first.")
             return False
         
         self.router.reboot(
@@ -565,41 +600,18 @@ class App(tk.Tk):
         return True
 
 
-    # def button_for_router_flashing(self):
-    #     self.router_reboot_button = tk.Button(
-    #         master=self,
-    #         text="FLASH",
-    #         font=("Arial", 20),
-    #         bg="#CCCCCC",
-    #         command=self._on_router_flash
-    #     )
-    #     self.router_reboot_button.place(relx=0.925, rely=0.925, relwidth=0.075, relheight=0.075)
-
-    
-    # def _on_router_flash(self) -> bool:
-    #     if not self.router.is_router_active():
-    #         self.log_queue.put("Error: No active router.\nSwitch it on first and connect it to the LAN Port.")
-    #         return False
-        
-    #     self.router.flash_router(
-    #         log=self.log_queue.put
-    #     )
-    #     return True
-
-
     #-------------------------------------------------------------
     #   AUTOMATIC CONFIGURATION
     #   (ein Button, der mehrere Einzelschritte hintereinander anstößt)
     #-------------------------------------------------------------
     
-    def wait_until(self, func, check, delay=1, comment=None):
+    def wait_until(self, func, check, comment=None):
         if comment:
             self.log_queue.put(comment)
         func()
-        while not check():
+        while self.router.threading_busy.is_set() or not check():
             if self.cancel_event.is_set():
                 raise InterruptedError(comment)
-            time.sleep(delay)
 
 
     def button_for_auto_configuration(self):
@@ -615,9 +627,10 @@ class App(tk.Tk):
         self.auto_configuration_button.place(relx=0.600, rely=0.5225,relwidth=0.350, relheight=0.051)
 
 
-    def _on_auto_configuration(self):
-        if not self.router.is_router_active():
-            self.log_queue.put("Error: No active router.\nSwitch it on first and connect it to the LAN Port.")
+    def _on_auto_configuration(self) -> bool:
+        ip=self.router_ip.get().strip()
+        if not self.router.is_router_active(ip):
+            self.log_queue.put("Error: No active router.\nTurn it on first/Change router IP.")
             return False
 
         self.cancel_event.clear()
@@ -679,6 +692,7 @@ class App(tk.Tk):
             for label, func, check in steps:
                 self.wait_until(func=func, check=check, comment=f"----- {label} -----")
                 completed.append(label)
+                time.sleep(2)
             self.log_queue.put("----- CONFIGURATION FINISHED -----")
             return True
 
