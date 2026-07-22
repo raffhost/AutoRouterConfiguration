@@ -13,6 +13,7 @@ class Router():
 
         # Queue to store incoming tasks
         self.task_queue = queue.Queue()
+        self.threading_busy = threading.Event()
         
         # Start a single background queue thread
         threading.Thread(target=self._queue, daemon=True).start()
@@ -43,6 +44,7 @@ class Router():
 
 
     def add_to_queue(self, func, *args, **kwargs):
+        self.threading_busy.set()
         self.task_queue.put((func, args, kwargs))
 
 
@@ -54,6 +56,7 @@ class Router():
             except Exception as e:
                 print(f"Queue error: {e}")
             finally:
+                self.threading_busy.clear()
                 self.task_queue.task_done()
 
 
@@ -121,7 +124,7 @@ class Router():
 
         if log: log("Firmware compatible. Starting update...")
         self._run_detached("nohup sysupgrade -n /tmp/firmware.bin > /dev/null 2>&1 &")
-        if log: log("Flashing firmware... Router will reboot.")
+        if log: log("Flashing firmware... Router may reboot.")
 
 
     def _change_password_process(self, new_password, log=None):
@@ -240,8 +243,9 @@ class Router():
         return self.run_command("uci show system")
 
 
-    def disconnect(self):
+    def disconnect(self, log=None):
         try:
             self.client.close()
+            if log: log("SSH Connection closed.")
         except:
             pass
