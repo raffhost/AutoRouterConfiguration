@@ -106,7 +106,6 @@ class Router():
             log("Flashing firmware... Router will reboot.")
             time.sleep(3)
             log("Waiting for router to reboot...")
-        self.disconnect()
 
 
     def _change_password_process(self, new_password, log=None):
