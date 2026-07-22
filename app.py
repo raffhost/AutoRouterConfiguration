@@ -14,9 +14,9 @@ with open("config.json") as file:
     data = json.load(file)
 
 
-FIRMWARE_LIST = data["FIRMWARE_LIST"]
-ISP_PROFILE_LIST = data["ISP_PROFILE_LIST"]
-APN_LIST = data["APN_LIST"]
+FIRMWARE_LIST = data['FIRMWARE_LIST']
+ISP_PROFILE_LIST = data['ISP_PROFILE_LIST']
+APN_LIST = data['APN_LIST']
 
 
 class App(tk.Tk):
@@ -34,10 +34,14 @@ class App(tk.Tk):
         self._prev_updated_state = None
         self._prev_ip = None
 
+        # Cancel event while auto configuration
+        self.cancel_event = threading.Event()
+
         # Create queue for multiple threading (safe) at the same time
         self.log_queue = queue.Queue()
         self.gui_queue = queue.Queue()
         self.after(100, self._process_queues)
+        
 
 
     #-------------------------------------------------------------
@@ -174,7 +178,7 @@ class App(tk.Tk):
             "\nUsed for flashing and checking if the router is up to date."
         )
 
-        firmware_list = [item["Name"] for item in FIRMWARE_LIST]
+        firmware_list = [item['Name'] for item in FIRMWARE_LIST]
         self.select_firmware = ttk.Combobox(
             master=self,
             values=firmware_list,
@@ -199,7 +203,7 @@ class App(tk.Tk):
             "\nThe IP is shown below the dropdown."
         )
 
-        isp_list = [item["ISP"] for item in ISP_PROFILE_LIST]
+        isp_list = [item['ISP'] for item in ISP_PROFILE_LIST]
         self.select_isp = ttk.Combobox(
             master=self,
             values=isp_list,
@@ -226,7 +230,7 @@ class App(tk.Tk):
             "\nYou can also type it manually if you know the correct APN."
         )
 
-        apn_list = [item["APN"] for item in APN_LIST]
+        apn_list = [item['APN'] for item in APN_LIST]
         self.select_apn = ttk.Combobox(
             master=self,
             values=apn_list,
@@ -299,7 +303,7 @@ class App(tk.Tk):
         )
         self.router_ip_label.place(relx=0.01, rely=0.175)
 
-        ip_list = [item["IP"] for item in ISP_PROFILE_LIST]
+        ip_list = [item['IP'] for item in ISP_PROFILE_LIST]
         self.router_ip = ttk.Combobox(
             master=self,
             values=ip_list,
@@ -319,14 +323,7 @@ class App(tk.Tk):
 
     def update_ip(self, event=None):
         self.router_ip.delete(0, "end")
-        self.router_ip.insert(0, ISP_PROFILE_LIST[self.select_isp.current()]["IP"])
-
-
-    #-------------------------------------------------------------
-    #   INPUT HELPERS AND AUTO-FILL
-    #   (aktuell keine eigenen Funktionen – reserviert für künftige
-    #   Auto-Fill-/Validierungslogik der Eingabefelder)
-    #-------------------------------------------------------------
+        self.router_ip.insert(0, ISP_PROFILE_LIST[self.select_isp.current()]['IP'])
 
 
     #-------------------------------------------------------------
@@ -359,19 +356,30 @@ class App(tk.Tk):
         selected = FIRMWARE_LIST[self.select_firmware.current()]
         current = self.router.get_firmware_version()
 
-        if self.router.is_router_updated(selected["Version"]):
+        if self.router.is_router_updated(selected['Version']) and self.update_checkbox_state.get()==0:
             self.log_queue.put(f"Router firmware is up to date. No update needed.")
-            self.log_queue.put(f"Current firmware: {current}")
+            self.log_queue.put(f"Current firmware: {current}\n If you still want to update, toogle checkbox on. ")
+            self.update_checkbox.config(state="normal")
             return False
 
         self.log_queue.put(f"Current firmware: {current}")
-        self.log_queue.put(f"Updating to: {selected["Version"]}. Please wait...")
+        self.log_queue.put(f"Updating to: {selected['Version']}. Please wait...")
         self.router.update(
-            firmware_path=selected["PATH"],
+            firmware_path=selected['PATH'],
             log=self.log_queue.put
         )
         return True
 
+
+    def checkbox_for_updating(self):
+        self.update_checkbox_state=tk.IntVar()
+        self.update_checkbox = tk.Checkbutton(
+            master=self,
+            text="Update",
+            variable=self.update_checkbox_state,
+            state="disabled"
+        )
+        self.update_checkbox.place(relx=0.225, rely=0.675)
 
     # --- ISP-Profil setzen ---
 
@@ -403,7 +411,7 @@ class App(tk.Tk):
         
         profile = ISP_PROFILE_LIST[self.select_isp.current()]
         self.router_ip.delete(0, "end")
-        self.router_ip.insert(0, profile["IP"])
+        self.router_ip.insert(0, profile['IP'])
         self.router.change_isp(
             isp=isp,
             log=self.log_queue.put
@@ -521,7 +529,7 @@ class App(tk.Tk):
             bg="#CCCCCC",
             command=self._on_router_restart
         )
-        self.router_restart_button.place(relx=0.600, rely=0.5225, relwidth=0.150, relheight=0.051)
+        self.router_restart_button.place(relx=0.600, rely=0.927, relwidth=0.150, relheight=0.051)
 
     
     def _on_router_restart(self) -> bool:
@@ -543,7 +551,7 @@ class App(tk.Tk):
             bg="#CCCCCC",
             command=self._on_router_reboot
         )
-        self.router_reboot_button.place(relx=0.800, rely=0.5225, relwidth=0.150, relheight=0.051)
+        self.router_reboot_button.place(relx=0.800, rely=0.927, relwidth=0.150, relheight=0.051)
 
     
     def _on_router_reboot(self) -> bool:
@@ -557,6 +565,28 @@ class App(tk.Tk):
         return True
 
 
+    # def button_for_router_flashing(self):
+    #     self.router_reboot_button = tk.Button(
+    #         master=self,
+    #         text="FLASH",
+    #         font=("Arial", 20),
+    #         bg="#CCCCCC",
+    #         command=self._on_router_flash
+    #     )
+    #     self.router_reboot_button.place(relx=0.925, rely=0.925, relwidth=0.075, relheight=0.075)
+
+    
+    # def _on_router_flash(self) -> bool:
+    #     if not self.router.is_router_active():
+    #         self.log_queue.put("Error: No active router.\nSwitch it on first and connect it to the LAN Port.")
+    #         return False
+        
+    #     self.router.flash_router(
+    #         log=self.log_queue.put
+    #     )
+    #     return True
+
+
     #-------------------------------------------------------------
     #   AUTOMATIC CONFIGURATION
     #   (ein Button, der mehrere Einzelschritte hintereinander anstößt)
@@ -567,109 +597,119 @@ class App(tk.Tk):
             self.log_queue.put(comment)
         func()
         while not check():
+            if self.cancel_event.is_set():
+                raise InterruptedError(comment)
             time.sleep(delay)
 
 
     def button_for_auto_configuration(self):
         self.auto_configuration_button = tk.Button(
             master=self,
-            text="Automatische\nConfiguration",
+            text="Auto Configuration",
             font=("Arial", 20),
             bg="#CCCCCC",
             command=lambda: self.run_in_thread(
                 self._on_auto_configuration
             )
         )
-        self.auto_configuration_button.place(relx=0.600, rely=0.5225,relwidth=0.350, relheight=0.071)
+        self.auto_configuration_button.place(relx=0.600, rely=0.5225,relwidth=0.350, relheight=0.051)
 
 
     def _on_auto_configuration(self):
         if not self.router.is_router_active():
-            self.log_queue.put(
-                "Error: No active router.\nSwitch it on first and connect it to the LAN Port."
-            )
+            self.log_queue.put("Error: No active router.\nSwitch it on first and connect it to the LAN Port.")
             return False
 
+        self.cancel_event.clear()
+        self.button_for_canceling_auto_configuration()
+        self.gui_queue.put(self._show_cancel_button)
+        
+        steps = [ # label, func, check
+            ("--- 01/CONNECTION ---",
+             self._on_connect, 
+             self.router.is_connected
+            ),
+            ("--- 02/UPDATE ---",
+             self._on_firmware_update, 
+             lambda: self.router.is_router_updated(
+                 FIRMWARE_LIST[self.select_firmware.current()]['Version']
+                )
+            ),
+            ("--- REBOOTING... WAIT ---",
+             lambda: None, 
+             lambda: self.router.is_router_active(self.router_ip.get())
+            ),
+            ("RE-CONNECTION",
+             self._on_connect, 
+             self.router.is_connected
+            ),
+            ("03/CHANGING PASSWORD",
+             self._on_change_password, 
+             self.router.is_connected
+            ),
+            ("04/ISP",
+             self._on_change_isp, 
+             lambda: self.router.is_isp_changed(self.select_isp.get().strip())
+            ),
+            ("RE-CONNECTION",
+             self._on_connect, 
+             self.router.is_connected
+            ),
+            ("05/APN",
+             self._on_change_apn, 
+             lambda: self.router.is_apn_changed(self.select_apn.get().strip())
+            ),
+            ("06/NETRestart",
+             self._on_router_restart, 
+             lambda: not self.router.is_connected()
+            ),
+            ("WAIT FOR ROUTER",
+             lambda: None, 
+             lambda: self.router.is_router_active(self.router_ip.get())
+            ),
+            ("RE-CONNECTION",
+             self._on_connect, 
+             self.router.is_connected
+            ),
+        ]
+
         self.log_queue.put("Starting auto configuration protocol!")
+        completed = []
+        try:
+            for label, func, check in steps:
+                self.wait_until(func=func, check=check, comment=f"----- {label} -----")
+                completed.append(label)
+            self.log_queue.put("----- CONFIGURATION FINISHED -----")
+            return True
 
-        self.wait_until(
-            comment="----- 01/CONNECTION -----",
-            func=self._on_connect,
-            check=self.router.is_connected
+        except InterruptedError:
+            remaining = [label for label, _, _ in steps if label not in completed]
+            self.log_queue.put("----- CONFIGURATION CANCELLED BY USER -----")
+            self.log_queue.put(f"Completed: {', '.join(completed) if completed else 'none'}")
+            self.log_queue.put(f"Not completed: {', '.join(remaining) if remaining else 'none'}")
+            return False
+
+        finally:
+            self.gui_queue.put(self._hide_cancel_button)
+
+
+    def button_for_canceling_auto_configuration(self):
+        self.cancel_button = tk.Button(
+            master=self,
+            text="Cancel",
+            font=("Arial", 20),
+            bg="#E28C8C",
+            command=self.cancel_event.set
         )
 
-        self.wait_until(
-            comment="----- 02/UPDATE -----",
-            func=self._on_firmware_update,
-            check=lambda: self.router.is_router_updated(
-                FIRMWARE_LIST[self.select_firmware.current()]["Version"]
-            )
-        )
 
-        self.wait_until(
-            comment="----- REBOOTING... WAIT -----",
-            func=lambda: None,
-            check=lambda: self.router.is_router_active(self.router_ip.get())
-        )
+    def _show_cancel_button(self):
+        self.auto_configuration_button.place_forget()
+        self.cancel_button.place(relx=0.600, rely=0.5225, relwidth=0.350, relheight=0.051)
 
-        self.wait_until(
-            comment="----- RE-CONNECTION -----",
-            func=self._on_connect,
-            check=self.router.is_connected
-        )
-
-        self.wait_until(
-            comment="----- 03/CHANGING PASSWORD -----",
-            func=self._on_change_password,
-            check=self.router.is_connected
-        )
-
-        self.wait_until(
-            comment="----- 04/ISP -----",
-            func=self._on_change_isp,
-            check=lambda: self.router.is_isp_changed(
-                self.select_isp.get().strip()
-            )
-        )
-
-        self.wait_until(
-            comment="----- RE-CONNECTION -----",
-            func=self._on_connect,
-            check=self.router.is_connected
-        )
-
-        self.wait_until(
-            comment="----- 05/APN -----",
-            func=self._on_change_apn,
-            check=lambda: self.router.is_apn_changed(
-                self.select_apn.get().strip()
-            )
-        )
-
-        self.wait_until(
-            comment="----- 06/NETRestart -----",
-            func=self._on_router_restart,
-            check=lambda: not self.router.is_connected()
-        )
-
-        self.wait_until(
-            comment="----- WAIT FOR ROUTER -----",
-            func=lambda: None,
-            check=lambda: self.router.is_router_active(self.router_ip.get())
-        )
-
-        self.wait_until(
-            comment="----- RE-CONNECTION -----",
-            func=self._on_connect,
-            check=self.router.is_connected
-        )
-
-        self.log_queue.put("----- CONFIGURATION FINISHED -----")
-        return True
-
-
-
-
+    def _hide_cancel_button(self):
+        self.cancel_button.place_forget()
+        self.auto_configuration_button.place(relx=0.600, rely=0.5225, relwidth=0.350, relheight=0.051)
 
 
     #-------------------------------------------------------------
@@ -717,6 +757,7 @@ class App(tk.Tk):
         self.default_password_entry()
 
         self.firmware_selection()
+        self.checkbox_for_updating()
         self.isp_selection()
         self.apn_selection()
 
