@@ -9,8 +9,8 @@ import threading
 import json
 
 from arctic_log import ArcticLog
-from Extensions.tooltip import Tooltip
-import Version2_Test.Configs.arctic_config as cfg
+from tooltip import Tooltip
+import test_2.arctic_config as cfg
 
 with open("config.json") as file:
     data = json.load(file)
@@ -86,7 +86,7 @@ class ArcticGUI(tk.Tk):
 
         self.log_chat_scrollbar.config(command=self.log_chat_box.yview)
 
-
+        
     #-------------------------------
     #   CONNECTION AND CONFIGURATION INPUTS
     #-------------------------------

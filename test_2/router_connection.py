@@ -1,5 +1,5 @@
 import paramiko
-from Version2_Test.Extensions.task_queue import TaskQueue
+from task_queue import TaskQueue
 
 
 #-----------------------------
@@ -22,24 +22,23 @@ class RouterConnection():
 
     def connect(self, ip, user="root", password="admin01", on_done=None):
         # Puts _connect() into the queue
-        self.queue.add_task(self._connect, ip, user, password, on_done)
-        self.connected = True
+        self.queue.add_task(self._connect, ip, user, password, on_done=on_done)
 
     def send_command(self, command, store_output=False, on_done=None):
         # Puts _send_command into the queue
-        self.queue.add_task(self._send_command, command, store_output)
+        self.queue.add_task(self._send_command, command, store_output, on_done=on_done)
 
     def send_detached(self, command, on_done=None):
         # Puts _send_detached into the queue
-        self.queue.add_task(self._send_detached, command)
+        self.queue.add_task(self._send_detached, command, on_done=on_done)
 
     def upload_file(self, local_path, remote_path="/tmp/firmware.bin", on_done=None):
         # Puts _upload_file into the queue
-        self.queue.add_task(self._upload_file, local_path, remote_path)
+        self.queue.add_task(self._upload_file, local_path, remote_path, on_done=on_done)
 
     def disconnect(self, on_done=None):
         # Puts _disconnect into the queue
-        self.queue.add_task(self._disconnect)
+        self.queue.add_task(self._disconnect, on_done=on_done)
 
         
     #------------
@@ -55,7 +54,19 @@ class RouterConnection():
     #-------------------------------
 
     def _connect(self, ip, user, password):
-        pass
+        try:
+            self.client.connect(
+                hostname=ip, 
+                username=user, password=password,
+                timeout=3, banner_timeout=3
+            )
+            self.connected = True
+            return {"success": True}
+        
+        except Exception as e:
+            self.connected = False
+            return {"success": False, "error": str(e)}
+
 
     def _send_command(self, command, store_output):
         # Runs a command and waits for a response (exit_code, stdout, and stderr).
@@ -89,3 +100,20 @@ class RouterConnection():
     def _disconnect(self):
         # Instantly closes channel
         self.client.close()
+
+
+
+if __name__ == "__main__":
+    import time
+
+    conn = RouterConnection()
+    conn.connect(
+        ip="100.64.6.1",
+        password="Mina19",
+        on_done=lambda result: print("Connect finished:", result)
+    )
+
+    print("Sofort danach, is_busy:", conn.is_busy())  # вероятно True
+    time.sleep(2)
+    print("Nach 2 Sekunden, is_busy:", conn.is_busy())  # должно быть False
+    print("conn.connected:", conn.connected)

@@ -11,6 +11,7 @@
 # drained via root.after(), i.e. from inside the tkinter mainloop.
 
 import queue
+from arctic_gui import ArcticGUI
 from datetime import datetime
 
 
@@ -18,21 +19,16 @@ from datetime import datetime
 #       ARCTIC LOG
 #-----------------------------
 
-class ArcticLog():
+class ArcticLog(ArcticGUI):
     def __init__(self, text_widget):
         self.text_widget = text_widget
         self.log_queue = queue.Queue()
         self.gui_queue = queue.Queue()
+        self.after(200, self.process_queues)
 
+    def put_log(self, message):
+        # Called from ANY thread to queue a text message for the log window.
 
-    # def put_log(self, message):
-    #     # Called from ANY thread to queue a text message for the log window.
-    #     time = datetime.now().strftime("%H:%M:%S")
-    #     self.log_chat.config(state="normal")
-    #     self.log_chat.insert("end", f"[{time}] | {message}\n")
-    #     self.log_chat.see("end")
-    #     self.log_chat.config(state="disabled")
-    #     pass
 
     def put_gui(self, func):
         # Called from ANY thread to queue a function that changes the GUI
@@ -42,9 +38,23 @@ class ArcticLog():
     def process_queues(self):
         # Called repeatedly via root.after(...) - MAIN THREAD ONLY.
         # Drains both queues and applies everything safely.
-        pass
+        # Queue for logs
+        while not self.log_queue.empty():
+            message = self.log_queue.get_nowait()
+            self.put_log(message)
+
+        # Queue for GUI
+        while not self.gui_queue.empty():
+            func = self.gui_queue.get_nowait()
+            func()
+        
+        self.after(200, self.process_queues)
 
     def _write(self, message):
         # Actually inserts text into the Text widget (with timestamp).
-        # Main thread only - never call this directly from a background thread.
-        pass
+        # Never call this directly from a background thread.
+        time = datetime.now().strftime("%H:%M:%S")
+        self.log_chat_box.config(state="normal")
+        self.log_chat_box.insert("end", f"[{time}] | {message}\n")
+        self.log_chat_box.see("end")
+        self.log_chat_box.config(state="disabled")
