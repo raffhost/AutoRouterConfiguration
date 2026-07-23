@@ -3,6 +3,7 @@ import tkinter.ttk as ttk
 from datetime import datetime
 from tooltip import Tooltip
 from router import Router
+import tooltip_config as tconf
 import threading
 import json
 import queue
@@ -175,9 +176,7 @@ class App(tk.Tk):
         self.firmware_selection_help = self.create_help_label(relx=0.485, rely=0.625)
         Tooltip(
             widget=self.firmware_selection_help,
-            text="Select the firmware version for your router model." \
-            "\nMust match the exact model (e.g. RUT2_R_GPL for RUT240)." \
-            "\nUsed for flashing and checking if the router is up to date."
+            text=tconf.FIRMWARE_TOOLTIP
         )
 
         firmware_list = [item['Name'] for item in FIRMWARE_LIST]
@@ -200,9 +199,7 @@ class App(tk.Tk):
         self.isp_help = self.create_help_label(relx=0.485, rely=0.725)
         Tooltip(
             widget=self.isp_help,
-            text="Select the ISP profile for this router." \
-            "\nEach profile has a different gateway IP." \
-            "\nThe IP is shown below the dropdown."
+            text=tconf.ISP_TOOLTIP
         )
 
         isp_list = [item['ISP'] for item in ISP_PROFILE_LIST]
@@ -227,9 +224,7 @@ class App(tk.Tk):
         self.apn_help = self.create_help_label(relx=0.485, rely=0.825)
         Tooltip(
             widget=self.apn_help,
-            text="APN (Access Point Name) is required for mobile data." \
-            "\nFilled automatically when you select a provider." \
-            "\nYou can also type it manually if you know the correct APN."
+            text=tconf.APN_TOOLTIP
         )
 
         apn_list = [item['APN'] for item in APN_LIST]
@@ -263,9 +258,7 @@ class App(tk.Tk):
         self.new_password_help = self.create_help_label(relx=0.485, rely=0.28)
         Tooltip(
             widget=self.new_password_help,
-            text="The new password that will be set on the router." \
-            "\nThis replaces the default password after setup." \
-            "\nChoose something secure."
+            text=tconf.NEW_PASSWORD_TOOLTIP
         )
 
 
@@ -289,9 +282,7 @@ class App(tk.Tk):
         self.default_password_help = self.create_help_label(relx=0.485, rely=0.38)
         Tooltip(
             widget=self.default_password_help,
-            text="The current password on the router." \
-            "\nAfter a factory reset this is always admin01." \
-            "\nUsed to establish the SSH connection."
+            text=tconf.DEFAULT_PASSWORD_TOOLTIP
         )
 
 
@@ -317,9 +308,7 @@ class App(tk.Tk):
         self.router_ip_help = self.create_help_label(relx=0.485, rely=0.18)
         Tooltip(
             widget=self.router_ip_help,
-            text="The IP address of the router." \
-            "\nAfter a factory reset this is always 192.168.1.1." \
-            "\nChange it if your router uses a different IP."
+            text=tconf.ROUTER_IP_TOOLTIP
         )
 
 
@@ -702,8 +691,8 @@ class App(tk.Tk):
         except InterruptedError:
             remaining = [label for label, _, _ in steps if label not in completed]
             self.log_queue.put("----- CONFIGURATION CANCELLED BY USER -----")
-            self.log_queue.put(f"Completed: {', '.join(completed) if completed else 'none'}")
-            self.log_queue.put(f"Not completed: {', '.join(remaining) if remaining else 'none'}")
+            self.log_queue.put(f"\nCompleted: {',\n'.join(completed) if completed else 'none'}")
+            self.log_queue.put(f"\nNot completed: {',\n'.join(remaining) if remaining else 'none'}")
             return False
 
         finally:
