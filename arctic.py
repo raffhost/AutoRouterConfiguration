@@ -3,7 +3,7 @@ import tkinter.ttk as ttk
 from datetime import datetime
 from tooltip import Tooltip
 from router import Router
-import arctic_config as aconf
+import config as aconf
 import threading
 import json
 import queue
