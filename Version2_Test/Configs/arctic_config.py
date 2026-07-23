@@ -1,4 +1,34 @@
 
+
+#----------------------
+#       LABELS
+#----------------------
+
+MAIN_LABEL = "Auto Router Configuration\nTool Interface"
+STATUS_LABEL ="Router Active"
+NEW_PASSWORD_LABEL = "New password:"
+DEFAULT_PASSWORD_LABEL = "Def password:"
+ROUTER_IP_LABEL = "Router IP:"
+FIRMWARE_LABEL = "Select Firmware:"
+ISP_LABEL = "Select ISP"
+APN_LABEL = "Select APN"
+
+
+#-------------------
+#       FONTS
+#-------------------
+A16 = ("Arial", 16)
+A28B = ("Arial", 28, "bold")
+A26B = ("Arial", 26, "bold")
+A42B = ("Arial", 42, "bold")
+C9 = ("Consolas", 9)
+
+
+#----------------------
+#       LOGS
+#----------------------
+
+
 #----------------------
 #       TOOLTIPS
 #----------------------
@@ -32,3 +62,4 @@ Access Point Name (APN) is required for mobile data.
 \nDifferent providers have different APNs!
 \nYou can type it manually or choose one.
 '''
+
