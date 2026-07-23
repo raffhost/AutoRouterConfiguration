@@ -5,7 +5,6 @@ import time
 import queue
 import json
 
-
 class Router():
     def __init__(self):
         self.client = paramiko.SSHClient()

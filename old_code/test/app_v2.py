@@ -1,6 +1,6 @@
 import customtkinter as ctk
 import tkinter as tk
-import config as cfg
+import old_code.test.config as cfg
 import json
 
 

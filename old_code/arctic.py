@@ -3,7 +3,7 @@ import tkinter.ttk as ttk
 from datetime import datetime
 from tooltip import Tooltip
 from router import Router
-import tooltip_config as tconf
+import arctic_config as aconf
 import threading
 import json
 import queue
@@ -176,7 +176,7 @@ class App(tk.Tk):
         self.firmware_selection_help = self.create_help_label(relx=0.485, rely=0.625)
         Tooltip(
             widget=self.firmware_selection_help,
-            text=tconf.FIRMWARE_TOOLTIP
+            text=aconf.FIRMWARE_TOOLTIP
         )
 
         firmware_list = [item['Name'] for item in FIRMWARE_LIST]
@@ -199,7 +199,7 @@ class App(tk.Tk):
         self.isp_help = self.create_help_label(relx=0.485, rely=0.725)
         Tooltip(
             widget=self.isp_help,
-            text=tconf.ISP_TOOLTIP
+            text=aconf.ISP_TOOLTIP
         )
 
         isp_list = [item['ISP'] for item in ISP_PROFILE_LIST]
@@ -224,7 +224,7 @@ class App(tk.Tk):
         self.apn_help = self.create_help_label(relx=0.485, rely=0.825)
         Tooltip(
             widget=self.apn_help,
-            text=tconf.APN_TOOLTIP
+            text=aconf.APN_TOOLTIP
         )
 
         apn_list = [item['APN'] for item in APN_LIST]
@@ -258,7 +258,7 @@ class App(tk.Tk):
         self.new_password_help = self.create_help_label(relx=0.485, rely=0.28)
         Tooltip(
             widget=self.new_password_help,
-            text=tconf.NEW_PASSWORD_TOOLTIP
+            text=aconf.NEW_PASSWORD_TOOLTIP
         )
 
 
@@ -282,7 +282,7 @@ class App(tk.Tk):
         self.default_password_help = self.create_help_label(relx=0.485, rely=0.38)
         Tooltip(
             widget=self.default_password_help,
-            text=tconf.DEFAULT_PASSWORD_TOOLTIP
+            text=aconf.DEFAULT_PASSWORD_TOOLTIP
         )
 
 
@@ -308,7 +308,7 @@ class App(tk.Tk):
         self.router_ip_help = self.create_help_label(relx=0.485, rely=0.18)
         Tooltip(
             widget=self.router_ip_help,
-            text=tconf.ROUTER_IP_TOOLTIP
+            text=aconf.ROUTER_IP_TOOLTIP
         )
 
 
@@ -591,131 +591,131 @@ class App(tk.Tk):
         return True
 
 
-    #-------------------------------------------------------------
-    #   AUTOMATIC CONFIGURATION
-    #   (ein Button, der mehrere Einzelschritte hintereinander anstößt)
-    #-------------------------------------------------------------
+    # #-------------------------------------------------------------
+    # #   AUTOMATIC CONFIGURATION (Probably gonna delete it or idk)
+    # #   (ein Button, der mehrere Einzelschritte hintereinander anstößt)
+    # #-------------------------------------------------------------
     
-    def wait_until(self, func, check, comment=None):
-        if comment:
-            self.log_queue.put(comment)
-        func()
-        while self.router.threading_busy.is_set() or not check():
-            if self.cancel_event.is_set():
-                raise InterruptedError(comment)
-            time.sleep(1)
+    # def wait_until(self, func, check, comment=None):
+    #     if comment:
+    #         self.log_queue.put(comment)
+    #     func()
+    #     while self.router.threading_busy.is_set() or not check():
+    #         if self.cancel_event.is_set():
+    #             raise InterruptedError(comment)
+    #         time.sleep(1)
 
 
-    def button_for_auto_configuration(self):
-        self.auto_configuration_button = tk.Button(
-            master=self,
-            text="Auto Configuration",
-            font=("Arial", 20),
-            bg="#CCCCCC",
-            command=lambda: self.run_in_thread(
-                self._on_auto_configuration
-            )
-        )
-        self.auto_configuration_button.place(relx=0.600, rely=0.5225,relwidth=0.350, relheight=0.051)
+    # def button_for_auto_configuration(self):
+    #     self.auto_configuration_button = tk.Button(
+    #         master=self,
+    #         text="Auto Configuration",
+    #         font=("Arial", 20),
+    #         bg="#CCCCCC",
+    #         command=lambda: self.run_in_thread(
+    #             self._on_auto_configuration
+    #         )
+    #     )
+    #     self.auto_configuration_button.place(relx=0.600, rely=0.5225,relwidth=0.350, relheight=0.051)
 
 
-    def _on_auto_configuration(self) -> bool:
-        ip=self.router_ip.get().strip()
-        if not self.router.is_router_active(ip):
-            self.log_queue.put("Error: No active router.\nTurn it on first/Change router IP.")
-            return False
+    # def _on_auto_configuration(self) -> bool:
+    #     ip=self.router_ip.get().strip()
+    #     if not self.router.is_router_active(ip):
+    #         self.log_queue.put("Error: No active router.\nTurn it on first/Change router IP.")
+    #         return False
 
-        self.cancel_event.clear()
-        self.button_for_canceling_auto_configuration()
-        self.gui_queue.put(self._show_cancel_button)
+    #     self.cancel_event.clear()
+    #     self.button_for_canceling_auto_configuration()
+    #     self.gui_queue.put(self._show_cancel_button)
         
-        steps = [ # label, func, check
-            ("01/CONNECTION",
-             lambda: self._on_connect(show_banner=True), 
-             self.router.is_connected
-            ),
-            ("02/UPDATE",
-             self._on_firmware_update, 
-             lambda: self.router.is_router_updated(
-                 FIRMWARE_LIST[self.select_firmware.current()]['Version']
-                )
-            ),
-            ("REBOOTING... WAIT",
-             lambda: None, 
-             lambda: self.router.is_router_active(self.router_ip.get())
-            ),
-            ("RE-CONNECTION",
-             self._on_connect, 
-             self.router.is_connected
-            ),
-            ("03/CHANGING PASSWORD",
-             self._on_change_password, 
-             self.router.is_connected
-            ),
-            ("04/ISP",
-             self._on_change_isp, 
-             lambda: not self.router.is_connected()
-            ),
-            ("RE-CONNECTION",
-             self._on_connect, 
-             self.router.is_connected
-            ),
-            ("05/APN",
-             self._on_change_apn, 
-             lambda: not self.router.is_connected()
-            ),
-            ("06/NETRestart",
-             self._on_router_restart, 
-             lambda: not self.router.is_connected()
-            ),
-            ("WAIT FOR ROUTER",
-             lambda: None, 
-             lambda: self.router.is_router_active(self.router_ip.get())
-            ),
-            ("RE-CONNECTION",
-             lambda: self._on_connect(show_banner=True), 
-             self.router.is_connected
-            ),
-        ]
+    #     steps = [ # label, func, check
+    #         ("01/CONNECTION",
+    #          lambda: self._on_connect(show_banner=True), 
+    #          self.router.is_connected
+    #         ),
+    #         ("02/UPDATE",
+    #          self._on_firmware_update, 
+    #          lambda: self.router.is_router_updated(
+    #              FIRMWARE_LIST[self.select_firmware.current()]['Version']
+    #             )
+    #         ),
+    #         ("REBOOTING... WAIT",
+    #          lambda: None, 
+    #          lambda: self.router.is_router_active(self.router_ip.get())
+    #         ),
+    #         ("RE-CONNECTION",
+    #          self._on_connect, 
+    #          self.router.is_connected
+    #         ),
+    #         ("03/CHANGING PASSWORD",
+    #          self._on_change_password, 
+    #          self.router.is_connected
+    #         ),
+    #         ("04/ISP",
+    #          self._on_change_isp, 
+    #          lambda: not self.router.is_connected()
+    #         ),
+    #         ("RE-CONNECTION",
+    #          self._on_connect, 
+    #          self.router.is_connected
+    #         ),
+    #         ("05/APN",
+    #          self._on_change_apn, 
+    #          lambda: not self.router.is_connected()
+    #         ),
+    #         ("06/NETRestart",
+    #          self._on_router_restart, 
+    #          lambda: not self.router.is_connected()
+    #         ),
+    #         ("WAIT FOR ROUTER",
+    #          lambda: None, 
+    #          lambda: self.router.is_router_active(self.router_ip.get())
+    #         ),
+    #         ("RE-CONNECTION",
+    #          lambda: self._on_connect(show_banner=True), 
+    #          self.router.is_connected
+    #         ),
+    #     ]
 
-        self.log_queue.put("Starting auto configuration protocol!")
-        completed = []
-        try:
-            for label, func, check in steps:
-                self.wait_until(func=func, check=check, comment=f"----- {label} -----")
-                completed.append(label)
-                time.sleep(2)
-            self.log_queue.put("----- CONFIGURATION FINISHED -----")
-            return True
+    #     self.log_queue.put("Starting auto configuration protocol!")
+    #     completed = []
+    #     try:
+    #         for label, func, check in steps:
+    #             self.wait_until(func=func, check=check, comment=f"----- {label} -----")
+    #             completed.append(label)
+    #             time.sleep(2)
+    #         self.log_queue.put("----- CONFIGURATION FINISHED -----")
+    #         return True
 
-        except InterruptedError:
-            remaining = [label for label, _, _ in steps if label not in completed]
-            self.log_queue.put("----- CONFIGURATION CANCELLED BY USER -----")
-            self.log_queue.put(f"\nCompleted: {',\n'.join(completed) if completed else 'none'}")
-            self.log_queue.put(f"\nNot completed: {',\n'.join(remaining) if remaining else 'none'}")
-            return False
+    #     except InterruptedError:
+    #         remaining = [label for label, _, _ in steps if label not in completed]
+    #         self.log_queue.put("----- CONFIGURATION CANCELLED BY USER -----")
+    #         self.log_queue.put(f"\nCompleted: {',\n'.join(completed) if completed else 'none'}")
+    #         self.log_queue.put(f"\nNot completed: {',\n'.join(remaining) if remaining else 'none'}")
+    #         return False
 
-        finally:
-            self.gui_queue.put(self._hide_cancel_button)
-
-
-    def button_for_canceling_auto_configuration(self):
-        self.cancel_button = tk.Button(
-            master=self,
-            text="Cancel",
-            font=("Arial", 20),
-            bg="#E28C8C",
-            command=self.cancel_event.set
-        )
+    #     finally:
+    #         self.gui_queue.put(self._hide_cancel_button)
 
 
-    def _show_cancel_button(self):
-        self.auto_configuration_button.place_forget()
-        self.cancel_button.place(relx=0.600, rely=0.5225, relwidth=0.350, relheight=0.051)
+    # def button_for_canceling_auto_configuration(self):
+    #     self.cancel_button = tk.Button(
+    #         master=self,
+    #         text="Cancel",
+    #         font=("Arial", 20),
+    #         bg="#E28C8C",
+    #         command=self.cancel_event.set
+    #     )
 
-    def _hide_cancel_button(self):
-        self.cancel_button.place_forget()
-        self.auto_configuration_button.place(relx=0.600, rely=0.5225, relwidth=0.350, relheight=0.051)
+
+    # def _show_cancel_button(self):
+    #     self.auto_configuration_button.place_forget()
+    #     self.cancel_button.place(relx=0.600, rely=0.5225, relwidth=0.350, relheight=0.051)
+
+    # def _hide_cancel_button(self):
+    #     self.cancel_button.place_forget()
+    #     self.auto_configuration_button.place(relx=0.600, rely=0.5225, relwidth=0.350, relheight=0.051)
 
 
     #-------------------------------------------------------------
@@ -781,7 +781,7 @@ class App(tk.Tk):
         self.button_for_updating_apn()
         self.button_for_router_restart()
         self.button_for_router_reboot()
-        self.button_for_auto_configuration()
+        # self.button_for_auto_configuration()
 
         self.mainloop()
 
