@@ -564,11 +564,6 @@ class App(tk.Tk):
             self.log_queue.put("Error: No APN selected or entered.")
             return False
 
-        if self.router.is_apn_changed(apn):
-            self.log_queue.put(f"APN is already correct. No changing needed.")
-            self.log_queue.put(f"Current APN: {apn}")
-            return False
-
         self.router.change_apn(
             apn=apn,
             log=self.log_queue.put
