@@ -64,7 +64,7 @@ class Router():
 
 
     def connect(self, ip="192.168.1.1", user="root", default_password="admin01", log=None, show_banner=False):
-        self.add_to_queue(self._connect_process, ip, user, default_password, log)
+        self.add_to_queue(self._connect_process, ip, user, default_password, log, show_banner)
 
 
     def update(self, firmware_path, log=None):
@@ -132,7 +132,7 @@ class Router():
         if log: log("Changing password...")
         self.run_command(f"echo -e '{new_password}\n{new_password}\n' | passwd")
         
-        if log: log("Password changed successfully.")
+        if log: log(f"Password changed to {new_password} successfully.")
 
 
     def _change_isp_process(self, isp, log=None):
@@ -142,8 +142,9 @@ class Router():
 
         # PROTECTED: Detached call since profiles frequently restart networking stack
         self._run_detached(f"profile.sh -c {isp}")
-
         if log: log(f"{isp} profile applied.")
+        self.save_and_restart_network(log=log)
+        if log: log(f"Network Restart.")
 
 
     def _change_apn_process(self, apn, log=None):
@@ -252,9 +253,10 @@ class Router():
         return self.run_command("uci show system")
 
 
-    def disconnect(self, log=None):
+    def disconnect(self, ip="192.168.1.1", log=None) -> bool:
         try:
             self.client.close()
-            if log: log("SSH Connection closed.")
+            if log: log(f"SSH Connection on {ip} closed.")
+            return True
         except:
-            pass
+            return False
