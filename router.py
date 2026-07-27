@@ -1,8 +1,7 @@
 import paramiko
 import threading
-import socket
-import time
 import queue
+import socket
 import json
 
 class Router():
@@ -194,16 +193,14 @@ class Router():
 
     def is_isp_changed(self, given_isp) -> bool:
         try:
-            current_isp = self.run_command("uci get profiles.general.profile").strip().upper().replace(" ", "")
-            return current_isp == given_isp
+            return self.get_isp() == given_isp
         except:
             return False
 
 
     def is_apn_changed(self, given_apn) -> bool:
         try:
-            current_apn = self.run_command("uci get network.mob1s1a1.apn").strip()
-            return current_apn == given_apn
+            return self.get_apn() == given_apn
         except:
             return False
 
@@ -228,21 +225,37 @@ class Router():
         self.restart_network(log=log)
 
 
-    def get_firmware_version(self) -> str:
-        return self.run_command("cat /etc/version").strip()  
+
+
 
 
     def get_board_info(self):
         raw = self.run_command("ubus call system board")
         return json.loads(raw)
-    
-
-    def get_lan_mac(self) -> str:
-        return self.run_command("cat /sys/class/net/br-lan/address").strip()
 
 
     def get_banner(self) -> str:
         return self.run_command("cat /etc/banner")
+
+
+    def get_firmware_version(self) -> str:
+        return self.run_command("cat /etc/version").strip()  
+
+
+    def get_lan_mac(self) -> str: # for example - 00:1e:42:34:71:c2
+        return self.run_command("cat /sys/class/net/br-lan/address").strip()
+
+
+    def get_apn(self) -> str:
+        return self.run_command("uci get network.mob1s1a1.apn").strip()
+
+
+    def get_isp(self) -> str:
+        return self.run_command("uci get profiles.general.profile").strip().upper().replace(" ", "")
+
+
+
+
 
 
     def show_network(self) -> str:
