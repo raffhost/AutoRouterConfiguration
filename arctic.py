@@ -1,9 +1,8 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from datetime import datetime
-from tooltip import Tooltip
 from router import Router
-import config as aconf
+import config as conf
 import threading
 import json
 import queue
@@ -72,12 +71,6 @@ class App(tk.Tk):
     #   UI HELPERS AND WINDOW LAYOUT
     #   (Hilfsfunktionen fürs Layout: Tooltip-Labels, Trennlinien)
     #-------------------------------------------------------------
-
-    def create_help_label(self, relx, rely, text="?", font=("Arial", 16), fg="gray"):
-        label = tk.Label(master=self, text=text, font=font, fg=fg)
-        label.place(relx=relx, rely=rely)
-        return label
-
 
     def screen_separation(self):
         self.cut_horizontal_m1 = ttk.Separator(master=self, orient="horizontal")
@@ -160,6 +153,49 @@ class App(tk.Tk):
             self._prev_active_state = current_state
 
 
+#-------------------------------------------------------------
+#   TOOLTIPS
+#-------------------------------------------------------------
+
+    def create_tooltip(self, master, tooltip_text, size=24):
+        icon = tk.Label(
+            master=master, text="?",
+            font=("Arial", int(size*0.6), "bold")
+        )
+        tooltip = None
+
+        def show(event):
+            nonlocal tooltip
+            if tooltip: return
+            
+            tooltip = tk.Toplevel(icon)
+            tooltip.wm_overrideredirect(True)
+            tooltip.wm_geometry(
+                f"+{icon.winfo_rootx()
+                +icon.winfo_width()+5
+                }+{icon.winfo_rooty()}"
+            )
+            
+            tooltip_label = tk.Label(
+                master=tooltip, text=tooltip_text,
+                padx=10, pady=8, font=("Arial", 11),
+                bg="#FFFFFF", borderwidth=1,
+                highlightbackground="#000000",
+                highlightthickness=1
+            )
+            tooltip_label.pack()
+
+        def hide(event):
+            nonlocal tooltip
+            if tooltip:
+                tooltip.destroy()
+                tooltip = None
+
+        icon.bind("<Enter>", show)
+        icon.bind("<Leave>", hide)
+        return icon
+
+
     #-------------------------------------------------------------
     #   CONNECTION AND CONFIGURATION INPUTS
     #   (Eingabefelder: Firmware/ISP/APN, Passwörter, Router-IP)
@@ -175,11 +211,11 @@ class App(tk.Tk):
         )
         self.firmware_label.place(relx=0.01, rely=0.62)
 
-        self.firmware_selection_help = self.create_help_label(relx=0.485, rely=0.625)
-        Tooltip(
-            widget=self.firmware_selection_help,
-            text=aconf.FIRMWARE_TOOLTIP
+        self.firmware_selection_help = self.create_tooltip(
+            master=self,
+            tooltip_text=conf.FIRMWARE_TOOLTIP
         )
+        self.firmware_selection_help.place(relx=0.485, rely=0.625)
 
         firmware_list = [item['Name'] for item in FIRMWARE_LIST]
         self.select_firmware = ttk.Combobox(
@@ -198,11 +234,11 @@ class App(tk.Tk):
         )
         self.isp_label.place(relx=0.01, rely=0.72)
 
-        self.isp_help = self.create_help_label(relx=0.485, rely=0.725)
-        Tooltip(
-            widget=self.isp_help,
-            text=aconf.ISP_TOOLTIP
+        self.isp_help = self.create_tooltip(
+            master=self,
+            tooltip_text=conf.ISP_TOOLTIP
         )
+        self.isp_help.place(relx=0.485, rely=0.725)
 
         isp_list = [item['ISP'] for item in ISP_PROFILE_LIST]
         self.select_isp = ttk.Combobox(
@@ -223,11 +259,12 @@ class App(tk.Tk):
         )
         self.apn_label.place(relx=0.01, rely=0.82)
 
-        self.apn_help = self.create_help_label(relx=0.485, rely=0.825)
-        Tooltip(
-            widget=self.apn_help,
-            text=aconf.APN_TOOLTIP
+        self.apn_help = self.create_tooltip(
+            master=self,
+            tooltip_text=conf.APN_TOOLTIP
         )
+        self.apn_help.place(relx=0.485, rely=0.825)
+
 
         apn_list = [item['APN'] for item in APN_LIST]
         self.select_apn = ttk.Combobox(
@@ -257,11 +294,12 @@ class App(tk.Tk):
         self.new_password.insert(0, "admin01")
         self.new_password.place(relx=0.22, rely=0.275, relwidth=0.25)
 
-        self.new_password_help = self.create_help_label(relx=0.485, rely=0.28)
-        Tooltip(
-            widget=self.new_password_help,
-            text=aconf.NEW_PASSWORD_TOOLTIP
+        self.new_password_help = self.create_tooltip(
+            master=self,
+            tooltip_text=conf.NEW_PASSWORD_TOOLTIP
         )
+        self.new_password_help.place(relx=0.485, rely=0.28)
+
 
 
     def default_password_entry(self):
@@ -281,11 +319,11 @@ class App(tk.Tk):
         self.default_password.insert(0, "admin01")
         self.default_password.place(relx=0.22, rely=0.375, relwidth=0.25, )
 
-        self.default_password_help = self.create_help_label(relx=0.485, rely=0.38)
-        Tooltip(
-            widget=self.default_password_help,
-            text=aconf.DEFAULT_PASSWORD_TOOLTIP
+        self.default_password_help = self.create_tooltip(
+            master=self,
+            tooltip_text=conf.DEFAULT_PASSWORD_TOOLTIP
         )
+        self.default_password_help.place(relx=0.485, rely=0.38)
 
 
     # --- Router-IP-Feld (inkl. Auto-Fill der IP beim ISP-Wechsel) ---
@@ -307,11 +345,11 @@ class App(tk.Tk):
         self.router_ip.insert(0, "192.168.1.1")
         self.router_ip.place(relx=0.22, rely=0.175, relwidth=0.25)
 
-        self.router_ip_help = self.create_help_label(relx=0.485, rely=0.18)
-        Tooltip(
-            widget=self.router_ip_help,
-            text=aconf.ROUTER_IP_TOOLTIP
+        self.router_ip_help = self.create_tooltip(
+            master=self,
+            tooltip_text=conf.ROUTER_IP_TOOLTIP
         )
+        self.router_ip_help.place(relx=0.485, rely=0.18)
 
 
     def update_ip(self, event=None):
@@ -361,6 +399,15 @@ class App(tk.Tk):
         )
         return True
 
+
+    # --- Reconnection to router ---
+
+    def _wait_for_router_and_reconnect(self, show_banner=False):
+        while not self.router.is_router_active(self.router_ip.get()):
+            if self.cancel_event.is_set():
+                raise InterruptedError("RECONNECTION")
+            time.sleep(1)
+        self._on_connect(show_banner=show_banner)
 
     # --- Passwort ändern ---
 
@@ -630,6 +677,26 @@ class App(tk.Tk):
 
 
     #-------------------------------------------------------------
+    #   ROUTER INFORMATION LIKE APN, ISP, FIRMWARE, LAN-MAC etc.
+    #   AND ROUTER CHECK LIKE - IS SIM INSERTED? (True/False)
+    #-------------------------------------------------------------
+
+    def create_router_info(self):
+        self.info_frame = tk.Frame(master=self, bg="#FFFFFF")
+        self.info_frame.place(relx=0.559, rely=0.15, relwidth=0.44, relheight=0.347)
+        # self.info_isp = None
+        # self.info_apn = None
+        # self.info_firmware = None
+        # self.info_lanmac = None
+
+        # self.router.get_isp()
+        # self.router.get_apn()
+
+    def create_router_check(self):
+        pass
+
+
+    #-------------------------------------------------------------
     #   AUTOMATIC CONFIGURATION 
     #   (ein Button, der mehrere Einzelschritte hintereinander anstößt)
     #-------------------------------------------------------------
@@ -669,68 +736,61 @@ class App(tk.Tk):
         
         steps = [ # label, func, check
             ("CONNECTION",
-             lambda: self._on_connect(show_banner=True), 
-             self.router.is_connected
+            lambda: self._on_connect(show_banner=True),
+            self.router.is_connected
             ),
             ("UPDATE",
-             self._on_firmware_update, 
-             lambda: self.router.is_router_updated(
-                 FIRMWARE_LIST[self.select_firmware.current()]['Version']
+            self._on_firmware_update,
+            lambda: self.router.is_router_updated(
+                FIRMWARE_LIST[self.select_firmware.current()]['Version']
                 )
             ),
-            ("WAIT FOR ROUTER",
-             lambda: None, 
-             lambda: self.router.is_router_active(self.router_ip.get())
-            ),
-            ("RE-CONNECTION",
-             self._on_connect, 
-             self.router.is_connected
+            ("RECONNECTION",
+            self._wait_for_router_and_reconnect,
+            self.router.is_connected
             ),
             ("NEW PASSWORD",
-             self._on_change_password, 
-             self.router.is_connected
+            self._on_change_password,
+            self.router.is_connected
             ),
             ("ISP",
-             self._on_change_isp, 
-             lambda: not self.router.is_connected()
+            self._on_change_isp,
+            lambda: not self.router.is_connected()
             ),
-            ("WAIT FOR ROUTER",
-             lambda: None, 
-             lambda: self.router.is_router_active(self.router_ip.get())
-            ),
-            ("RE-CONNECTION",
-             self._on_connect, 
-             self.router.is_connected
+            ("RECONNECTION",
+            self._wait_for_router_and_reconnect,
+            self.router.is_connected
             ),
             ("APN",
-             self._on_change_apn, 
-             lambda: not self.router.is_connected()
+            self._on_change_apn,
+            lambda: not self.router.is_connected()
             ),
-            ("WAIT FOR ROUTER",
-             lambda: None, 
-             lambda: self.router.is_router_active(self.router_ip.get())
-            ),
-            ("RE-CONNECTION",
-             lambda: self._on_connect(show_banner=True), 
-             self.router.is_connected
+            ("RECONNECTION",
+            lambda: self._wait_for_router_and_reconnect(show_banner=True),
+            self.router.is_connected
             ),
         ]
 
-        self.log_queue.put("----- CONFIGURATION STARTED -----")
-        completed = []
+        self.log_queue.put("##### CONFIGURATION STARTED #####")
+        completed_idx = 0
         try:
-            for label, func, check in steps:
+            for i, (label, func, check) in enumerate(steps):
                 self.wait_until(func=func, check=check, comment=f"----- {label} -----")
-                completed.append(label)
+                completed_idx = i + 1
                 time.sleep(2)
-            self.log_queue.put("----- CONFIGURATION FINISHED -----")
+            self.log_queue.put("##### CONFIGURATION FINISHED #####")
             return True
 
         except InterruptedError:
-            remaining = [label for label, _, _ in steps if label not in completed]
-            self.log_queue.put("----- CONFIGURATION CANCELLED BY USER -----")
-            self.log_queue.put(f"\nCompleted: ({',  '.join(completed) if completed else 'none'})")
-            self.log_queue.put(f"\nNot completed: {',  '.join(remaining) if remaining else 'none'}")
+            done = [label for label, _, _ in steps[:completed_idx]]
+            remaining = [label for label, _, _ in steps[completed_idx:]]
+
+            lines = ["----- CONFIGURATION CANCELLED BY USER -----", "", "Completed:"]
+            lines += [f"  ✔ {label}" for label in done] if done else ["  (none)"]
+            lines += ["", "Not completed:"]
+            lines += [f"  ✘ {label}" for label in remaining] if remaining else ["  (none)"]
+
+            self.log_queue.put("\n".join(lines))
             return False
 
         finally:
@@ -765,7 +825,7 @@ class App(tk.Tk):
 
     def log_chat(self):
         self.log_chat_frame = tk.Frame(master=self)
-        self.log_chat_frame.place(relx=0.558, rely=0.597, relwidth=0.44, relheight=0.30)
+        self.log_chat_frame.place(relx=0.558, rely=0.597, relwidth=0.442, relheight=0.30)
 
         self.log_chat_scrollbar = tk.Scrollbar(master=self.log_chat_frame)
         self.log_chat_scrollbar.pack(side="right", fill="y")
@@ -822,6 +882,9 @@ class App(tk.Tk):
 
         self.button_for_router_restart()
         self.button_for_router_reboot()
+
+        self.create_router_info()
+        self.create_router_check()
 
         self.button_for_auto_configuration()
 
