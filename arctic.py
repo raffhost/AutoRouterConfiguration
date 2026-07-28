@@ -7,13 +7,22 @@ import threading
 import json
 import queue
 import time
+import sys
+import os
 
+def get_base_path():
+    if getattr(sys, "frozen", False):   # True, wenn als .exe (PyInstaller) läuft
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+BASE_PATH = get_base_path()
+CONFIG_PATH = os.path.join(BASE_PATH, "config.json")
 
 # Firmware, ISP and APN
-with open("config.json") as file:
+with open(CONFIG_PATH, encoding="utf-8") as file:
     data = json.load(file)
 
-
+FIRMWARE_FOLDER = data.get("FIRMWARE_FOLDER", "")
 FIRMWARE_LIST = data['FIRMWARE_LIST']
 ISP_PROFILE_LIST = data['ISP_PROFILE_LIST']
 APN_LIST = data['APN_LIST']
@@ -513,11 +522,12 @@ class App(tk.Tk):
             self.log_queue.put(f"Current firmware: {current}\n If you still want to update, toogle checkbox on. ")
             self.update_checkbox.config(state="normal")
             return False
-
+        
         self.log_queue.put(f"Current firmware: {current}")
         self.log_queue.put(f"Updating to: {selected['Version']}. Please wait...")
+        firmware_path = os.path.join(FIRMWARE_FOLDER, selected['File'])
         self.router.update(
-            firmware_path=selected['PATH'],
+            firmware_path=firmware_path,
             log=self.log_queue.put
         )
         return True
