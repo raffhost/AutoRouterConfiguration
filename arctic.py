@@ -11,7 +11,7 @@ import sys
 import os
 
 def get_base_path():
-    if getattr(sys, "frozen", False):   # True, wenn als .exe (PyInstaller) läuft
+    if getattr(sys, "frozen", False):   # True if running as a .exe
         return os.path.dirname(sys.executable)
     return os.path.dirname(os.path.abspath(__file__))
 
@@ -43,10 +43,10 @@ class App(tk.Tk):
         self._prev_updated_state = None
         self._prev_ip = None
 
-        # Cancel event while auto configuration
+        # Signals cancellation while Auto Configuration is running
         self.cancel_event = threading.Event()
 
-        # Create queue for multiple threading (safe) at the same time
+        # Queues used to safely pass data from background threads to the GUI thread
         self.log_queue = queue.Queue()
         self.gui_queue = queue.Queue()
         self.after(100, self._process_queues)
@@ -55,7 +55,7 @@ class App(tk.Tk):
 
     #-------------------------------------------------------------
     #   INITIALIZATION AND THREADING
-    #   (Hintergrundthreads starten, Log-/GUI-Queue abarbeiten)
+    #   (Start background threads, process log and GUI queues)
     #-------------------------------------------------------------
 
     def run_in_thread(self, func, *args):
@@ -78,7 +78,7 @@ class App(tk.Tk):
 
     #-------------------------------------------------------------
     #   UI HELPERS AND WINDOW LAYOUT
-    #   (Hilfsfunktionen fürs Layout: Tooltip-Labels, Trennlinien)
+    #   (Helper functions for layout: tooltip labels, separators)
     #-------------------------------------------------------------
 
     def screen_separation(self):
@@ -98,7 +98,7 @@ class App(tk.Tk):
         self.cut_vertikal.place(relx=0.56, rely=0, relheight=1, anchor="ne")
 
 
-    # --- Titel & Statusanzeige "Router Active" (Ampel + Poll-Schleife) ---
+    # --- Title & status display "Router Active" (indicator + poll loop) ---
 
     def name_label(self):
         self.label = tk.Label(
@@ -156,7 +156,7 @@ class App(tk.Tk):
                 self.gui_queue.put(lambda: self.active_indicator.config(fg="red"))
                 self.log_queue.put(f"Lost a router on {self._prev_ip}")
 
-            else: # Will be used 1 time only, after starting programm
+            else: # Used only once, right after the program starts
                 self.gui_queue.put(lambda: self.active_indicator.config(fg="red"))
 
             self._prev_active_state = current_state
@@ -207,10 +207,10 @@ class App(tk.Tk):
 
     #-------------------------------------------------------------
     #   CONNECTION AND CONFIGURATION INPUTS
-    #   (Eingabefelder: Firmware/ISP/APN, Passwörter, Router-IP)
+    #   (Input fields: firmware/ISP/APN, passwords, router IP)
     #-------------------------------------------------------------
 
-    # --- Firmware-, ISP- und APN-Auswahl (Comboboxen aus config.json) ---
+    # --- Firmware, ISP and APN selection (comboboxes from config.json) ---
 
     def firmware_selection(self):
         self.firmware_label = tk.Label(
@@ -284,7 +284,7 @@ class App(tk.Tk):
         self.select_apn.place(relx=0.225, rely=0.82, relwidth=0.25)
 
 
-    # --- Passwort-Felder (neues Passwort / aktuelles router-Passwort) ---
+    # --- Password fields (new password / current router password) ---
 
     def new_password_entry(self):
         self.new_password_label = tk.Label(
@@ -335,7 +335,7 @@ class App(tk.Tk):
         self.router_password_help.place(relx=0.485, rely=0.28)
 
 
-    # --- Router-IP-Feld (inkl. Auto-Fill der IP beim ISP-Wechsel) ---
+    # --- Router IP field (incl. auto-fill of IP when ISP changes) ---
 
     def router_ip_entry(self):
         self.router_ip_label = tk.Label(
@@ -368,7 +368,7 @@ class App(tk.Tk):
 
     #-------------------------------------------------------------
     #   ACTION BUTTONS AND ROUTER OPERATIONS
-    #   (Buttons + zugehörige Klick-Handler, die router.py aufrufen)
+    #   (Buttons and their click handlers, which call into router.py)
     #-------------------------------------------------------------
 
     # --- Connection to router ---
@@ -418,7 +418,7 @@ class App(tk.Tk):
             time.sleep(1)
         self._on_connect(show_banner=show_banner)
 
-    # --- Passwort ändern ---
+    # --- Change router password ---
 
     def button_for_password_changing(self):
         self.change_password_button = tk.Button(
@@ -455,7 +455,7 @@ class App(tk.Tk):
         return True
 
 
-    # --- Router Disconnect ---
+    # --- Router disconnect ---
 
     def button_for_disconnect(self):
         self.connect_button = tk.Button(
@@ -487,7 +487,7 @@ class App(tk.Tk):
         )
         return True
 
-    # --- Firmware-Update ---
+    # --- Firmware update ---
 
     def button_for_updating_firmware(self):
         self.update_button = tk.Button(
@@ -543,7 +543,7 @@ class App(tk.Tk):
         )
         self.update_checkbox.place(relx=0.225, rely=0.675)
 
-    # --- Update/Change ISP profile ---
+    # --- Set/change ISP profile ---
 
     def button_for_updating_isp(self):
         self.isp_button = tk.Button(
@@ -593,7 +593,7 @@ class App(tk.Tk):
         return True
 
 
-    # --- Update/Change APN ---
+    # --- Set/change APN ---
 
     def button_for_updating_apn(self):
         self.apn_button = tk.Button(
@@ -628,7 +628,7 @@ class App(tk.Tk):
         return True
 
 
-    # --- Network-Restart ---
+    # --- Network restart ---
 
     def button_for_router_restart(self):
         self.router_restart_button = tk.Button(
@@ -657,7 +657,7 @@ class App(tk.Tk):
         return True
 
 
-    # --- Network Reboot ---
+    # --- Router reboot ---
 
     def button_for_router_reboot(self):
         self.router_reboot_button = tk.Button(
@@ -687,8 +687,8 @@ class App(tk.Tk):
 
 
     #-------------------------------------------------------------
-    #   ROUTER INFORMATION LIKE APN, ISP, FIRMWARE, LAN-MAC etc.
-    #   AND CHECKS LIKE - IS SIM INSERTED? (True/False)
+    #   ROUTER INFO PANEL (IP, ISP, APN, firmware, LAN-MAC, ...)
+    #   AND STATUS CHECKS (SIM state, data connection, network state)
     #-------------------------------------------------------------
 
     def create_router_info(self):
@@ -754,7 +754,7 @@ class App(tk.Tk):
         return info_x1, info_x2
 
 
-    # --- Copy Router Info ---
+    # --- Copy router info ---
 
     def button_for_router_info_copy(self):
         self.copy_button = tk.Button(
@@ -773,7 +773,7 @@ class App(tk.Tk):
         self.clipboard_append(text_to_copy)
 
 
-# --- Refresh Router Info ---
+    # --- Refresh router info ---
 
     def button_for_router_info_refresh(self):
         self.refresh_button = tk.Button(
@@ -803,7 +803,7 @@ class App(tk.Tk):
 
     #-------------------------------------------------------------
     #   AUTOMATIC CONFIGURATION 
-    #   (ein Button, der mehrere Einzelschritte hintereinander anstößt)
+    #   (a button that triggers multiple steps in sequence)
     #-------------------------------------------------------------
     
     def wait_until(self, func, check, comment=None):
@@ -921,12 +921,12 @@ class App(tk.Tk):
         self.auto_configuration_button.place(relx=0.600, rely=0.5225, relwidth=0.350, relheight=0.051)
 
 
-    # -------------------------------------------------------------
+    #-------------------------------------------------------------
     #   LOGGING AND APPLICATION STARTUP
-    #   (Log-Fenster sowie der finale Zusammenbau aller UI-Elemente)
-    # -------------------------------------------------------------
+    #   (Log window plus the final assembly of all UI elements)
+    #-------------------------------------------------------------
 
-    # --- Log-Fenster (Anzeige + Schreiben von Log-Nachrichten) ---
+    # --- Log window (display + write log messages) ---
 
     def log_chat(self):
         self.log_chat_frame = tk.Frame(master=self)
@@ -954,7 +954,7 @@ class App(tk.Tk):
         self.log_chat_box.config(state="disabled")
 
 
-    # --- App-Start (baut alle Layout-Elemente zusammen und startet mainloop) ---
+    # --- App start (assembles all layout elements and starts mainloop) ---
 
     def start(self):
         self.screen_separation()
@@ -998,7 +998,7 @@ class App(tk.Tk):
 
 
 #-------------------------------------------------------------
-#   PROGRAMMSTART
+#   ENTRY POINT
 #-------------------------------------------------------------
 
 if __name__ == "__main__":
