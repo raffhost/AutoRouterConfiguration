@@ -62,8 +62,8 @@ class Router():
 
 
 
-    def connect(self, ip="192.168.1.1", user="root", default_password="admin01", log=None, show_banner=False):
-        self.add_to_queue(self._connect_process, ip, user, default_password, log, show_banner)
+    def connect(self, ip="192.168.1.1", user="root", router_password="admin01", log=None, show_banner=False):
+        self.add_to_queue(self._connect_process, ip, user, router_password, log, show_banner)
 
 
     def update(self, firmware_path, log=None):
@@ -90,11 +90,11 @@ class Router():
 
 
 
-    def _connect_process(self, ip, user, default_password, log=None, show_banner=False):
+    def _connect_process(self, ip, user, router_password, log=None, show_banner=False):
         try:
             self.client.connect(
                 hostname=ip, username=user, 
-                password=default_password,
+                password=router_password,
                 timeout=3, banner_timeout=3
             )
             if log: 
@@ -252,6 +252,22 @@ class Router():
 
     def get_isp(self) -> str:
         return self.run_command("uci get profiles.general.profile").strip().upper().replace(" ", "")
+
+
+
+
+
+
+    def get_data_connection(self):
+        return self.run_command("gsmctl -j").strip()
+
+    
+    def get_sim_state(self):
+        return self.run_command("gsmctl -z").strip()
+
+
+    def get_network_state(self):
+        return self.run_command("gsmctl -g").strip()
 
 
 
