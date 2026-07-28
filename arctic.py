@@ -16,7 +16,7 @@ def get_base_path():
     return os.path.dirname(os.path.abspath(__file__))
 
 BASE_PATH = get_base_path()
-CONFIG_PATH = os.path.join(BASE_PATH, "config.json")
+CONFIG_PATH = os.path.join(BASE_PATH, "arctic_config.json")
 
 # Firmware, ISP and APN
 with open(CONFIG_PATH, encoding="utf-8") as file:
