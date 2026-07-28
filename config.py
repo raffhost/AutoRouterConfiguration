@@ -8,7 +8,7 @@ The new password that will be set on the router.
 \nThis replaces the default password after setup.
 \nChoose something secure.
 '''
-DEFAULT_PASSWORD_TOOLTIP = '''
+ROUTER_PASSWORD_TOOLTIP = '''
 The current password on the router for SSH connection.
 \nAfter a factory reset this is always
 \nadmin01 or the password on the back of the router.
@@ -32,3 +32,14 @@ Access Point Name (APN) is required for mobile data.
 \nDifferent providers have different APNs!
 \nYou can type it manually or choose one.
 '''
+
+
+#----------------------
+#        FONTS
+#----------------------
+LABELS_FONT_1 = ("Arial", 20)
+LABELS_FONT_2 = ("Arial", 26, "bold")
+BUTTONS_FONT_1 = ("Arial", 11, "bold")
+BUTTONS_FONT_2 = ("Arial", 14, "bold")
+CHAT_FONT_1 = ("Consolas", 9)
+CHAT_FONT_2 = ("Consolas", 12)
