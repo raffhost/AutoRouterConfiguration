@@ -129,7 +129,9 @@ class Router():
     def _change_password_process(self, new_password, log=None):
         # Change root password on router
         if log: log("Changing password...")
-        self.run_command(f"echo -e '{new_password}\n{new_password}\n' | passwd")
+        self.run_command(f"echo -e '{new_password}\n{new_password}\n' | passwd root")
+        username = self.get_username()  # Mostly just "admin"
+        self.run_command(f"echo -e '{new_password}\n{new_password}\n' | passwd {username}")
         
         if log: log(f"Password changed to {new_password} successfully.")
 
@@ -256,6 +258,10 @@ class Router():
 
 
 
+
+
+    def get_username(self):
+        return self.run_command("uci get rpcd.@login[0].username")
 
 
     def get_data_connection(self):
