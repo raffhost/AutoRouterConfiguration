@@ -95,7 +95,7 @@ class App(tk.Tk):
         self.label = tk.Label(
             master=self,
             text="Auto router configuration tool",
-            font=("Arial", 28, "bold")
+            font=conf.LABELS_FONT_2
         )
         self.label.place(relx=0.015, rely=0.035, anchor="nw")
 
@@ -104,7 +104,7 @@ class App(tk.Tk):
         self.active_text = tk.Label(
             master=self,
             text="Router Active",
-            font=("Arial", 26, "bold"),
+            font=conf.LABELS_FONT_2,
             fg="black"
         )
         self.active_text.place(relx=0.66, rely=0.035, anchor="nw")
@@ -207,7 +207,7 @@ class App(tk.Tk):
         self.firmware_label = tk.Label(
             master=self,
             text="Select firmware",
-            font=("Arial", 20)
+            font=conf.LABELS_FONT_1
         )
         self.firmware_label.place(relx=0.01, rely=0.62)
 
@@ -221,7 +221,7 @@ class App(tk.Tk):
         self.select_firmware = ttk.Combobox(
             master=self,
             values=firmware_list,
-            font=("Arial", 20)
+            font=conf.LABELS_FONT_1
         )
         self.select_firmware.place(relx=0.225, rely=0.62, relwidth=0.25)
 
@@ -230,7 +230,7 @@ class App(tk.Tk):
         self.isp_label = tk.Label(
             master=self,
             text="Select ISP profile",
-            font=("Arial", 20)
+            font=conf.LABELS_FONT_1
         )
         self.isp_label.place(relx=0.01, rely=0.72)
 
@@ -244,7 +244,7 @@ class App(tk.Tk):
         self.select_isp = ttk.Combobox(
             master=self,
             values=isp_list,
-            font=("Arial", 20)
+            font=conf.LABELS_FONT_1
         )
         self.select_isp.place(relx=0.225, rely=0.72, relwidth=0.25)
 
@@ -255,7 +255,7 @@ class App(tk.Tk):
         self.apn_label = tk.Label(
             master=self,
             text="Select APN",
-            font=("Arial", 20)
+            font=conf.LABELS_FONT_1
         )
         self.apn_label.place(relx=0.01, rely=0.82)
 
@@ -270,60 +270,60 @@ class App(tk.Tk):
         self.select_apn = ttk.Combobox(
             master=self,
             values=apn_list,
-            font=("Arial", 20)
+            font=conf.LABELS_FONT_1
             )
         self.select_apn.place(relx=0.225, rely=0.82, relwidth=0.25)
 
 
-    # --- Passwort-Felder (neues Passwort / aktuelles Default-Passwort) ---
+    # --- Passwort-Felder (neues Passwort / aktuelles router-Passwort) ---
 
     def new_password_entry(self):
         self.new_password_label = tk.Label(
             master=self,
             text="New password",
-            font=("Arial", 20)
+            font=conf.LABELS_FONT_1
         )
-        self.new_password_label.place(relx=0.01, rely=0.275)
+        self.new_password_label.place(relx=0.01, rely=0.375)
 
         new_pw_list=["admin01", "Start2026!"]
         self.new_password = ttk.Combobox(
             master=self,
             values=new_pw_list,
-            font=("Arial", 20)
+            font=conf.LABELS_FONT_1
         )
         self.new_password.insert(0, "admin01")
-        self.new_password.place(relx=0.22, rely=0.275, relwidth=0.25)
+        self.new_password.place(relx=0.22, rely=0.375, relwidth=0.25)
 
         self.new_password_help = self.create_tooltip(
             master=self,
             tooltip_text=conf.NEW_PASSWORD_TOOLTIP
         )
-        self.new_password_help.place(relx=0.485, rely=0.28)
+        self.new_password_help.place(relx=0.485, rely=0.38)
 
 
 
-    def default_password_entry(self):
-        self.default_password_label = tk.Label(
+    def router_password_entry(self):
+        self.router_password_label = tk.Label(
             master=self,
-            text="Default password",
-            font=("Arial", 20)
+            text="Router PW",
+            font=conf.LABELS_FONT_1
         )
-        self.default_password_label.place(relx=0.01, rely=0.375)
+        self.router_password_label.place(relx=0.01, rely=0.275)
 
         def_pw_list=["admin01",]
-        self.default_password = ttk.Combobox(
+        self.router_password = ttk.Combobox(
             master=self,
             values=def_pw_list,
-            font=("Arial", 20)
+            font=conf.LABELS_FONT_1
         )
-        self.default_password.insert(0, "admin01")
-        self.default_password.place(relx=0.22, rely=0.375, relwidth=0.25, )
+        self.router_password.insert(0, "admin01")
+        self.router_password.place(relx=0.22, rely=0.275, relwidth=0.25)
 
-        self.default_password_help = self.create_tooltip(
+        self.router_password_help = self.create_tooltip(
             master=self,
-            tooltip_text=conf.DEFAULT_PASSWORD_TOOLTIP
+            tooltip_text=conf.ROUTER_PASSWORD_TOOLTIP
         )
-        self.default_password_help.place(relx=0.485, rely=0.38)
+        self.router_password_help.place(relx=0.485, rely=0.28)
 
 
     # --- Router-IP-Feld (inkl. Auto-Fill der IP beim ISP-Wechsel) ---
@@ -332,7 +332,7 @@ class App(tk.Tk):
         self.router_ip_label = tk.Label(
             master=self,
             text="Router IP",
-            font=("Arial", 20)
+            font=conf.LABELS_FONT_1
         )
         self.router_ip_label.place(relx=0.01, rely=0.175)
 
@@ -340,7 +340,7 @@ class App(tk.Tk):
         self.router_ip = ttk.Combobox(
             master=self,
             values=ip_list,
-            font=("Arial", 20)
+            font=conf.LABELS_FONT_1
         )
         self.router_ip.insert(0, "192.168.1.1")
         self.router_ip.place(relx=0.22, rely=0.175, relwidth=0.25)
@@ -368,7 +368,7 @@ class App(tk.Tk):
         self.connect_button = tk.Button(
             master=self,
             text="Connect",
-            font=("Arial", 20),
+            font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
             command=lambda: self._on_connect(show_banner=True)
         )
@@ -377,7 +377,7 @@ class App(tk.Tk):
 
     def _on_connect(self, show_banner=False) -> bool:
         ip = self.router_ip.get().strip()
-        password = self.default_password.get().strip()
+        password = self.router_password.get().strip()
 
         if not self.router.is_router_active(ip):
             self.log_queue.put("Error: No active router.")
@@ -388,12 +388,12 @@ class App(tk.Tk):
             return False
         
         if not password:
-            self.log_queue.put("Error: Default password is empty.")
+            self.log_queue.put("Error: router password is empty.")
             return False
 
         self.router.connect(
             ip=ip,
-            default_password=password,
+            router_password=password,
             log=self.log_queue.put, 
             show_banner=show_banner   
         )
@@ -415,7 +415,7 @@ class App(tk.Tk):
         self.change_password_button = tk.Button(
             master=self,
             text="Change PW",
-            font=("Arial", 20),
+            font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
             command=self._on_change_password
         )
@@ -437,8 +437,8 @@ class App(tk.Tk):
             self.log_queue.put("Error: New password is empty.")
             return False
         
-        self.default_password.delete(0, "end")
-        self.default_password.insert(0, self.new_password.get())
+        self.router_password.delete(0, "end")
+        self.router_password.insert(0, self.new_password.get())
         self.router.change_password(
             new_password=password,
             log=self.log_queue.put
@@ -452,7 +452,7 @@ class App(tk.Tk):
         self.connect_button = tk.Button(
             master=self,
             text="Stop",
-            font=("Arial", 20),
+            font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
             command=self._on_disconnect
         )
@@ -484,7 +484,7 @@ class App(tk.Tk):
         self.update_button = tk.Button(
             master=self,
             text="Update",
-            font=("Arial", 20),
+            font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
             command=self._on_firmware_update
         )
@@ -539,7 +539,7 @@ class App(tk.Tk):
         self.isp_button = tk.Button(
             master=self,
             text="Set ISP",
-            font=("Arial", 20),
+            font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
             command=self._on_change_isp
         )
@@ -589,7 +589,7 @@ class App(tk.Tk):
         self.apn_button = tk.Button(
             master=self,
             text="Set APN",
-            font=("Arial", 20),
+            font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
             command=self._on_change_apn
         )
@@ -624,7 +624,7 @@ class App(tk.Tk):
         self.router_restart_button = tk.Button(
             master=self,
             text="NETRestart",
-            font=("Arial", 20),
+            font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
             command=self._on_router_restart
         )
@@ -653,7 +653,7 @@ class App(tk.Tk):
         self.router_reboot_button = tk.Button(
             master=self,
             text="Reboot",
-            font=("Arial", 20),
+            font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
             command=self._on_router_reboot
         )
@@ -678,22 +678,117 @@ class App(tk.Tk):
 
     #-------------------------------------------------------------
     #   ROUTER INFORMATION LIKE APN, ISP, FIRMWARE, LAN-MAC etc.
-    #   AND ROUTER CHECK LIKE - IS SIM INSERTED? (True/False)
+    #   AND CHECKS LIKE - IS SIM INSERTED? (True/False)
     #-------------------------------------------------------------
 
     def create_router_info(self):
-        self.info_frame = tk.Frame(master=self, bg="#FFFFFF")
-        self.info_frame.place(relx=0.559, rely=0.15, relwidth=0.44, relheight=0.347)
-        # self.info_isp = None
-        # self.info_apn = None
-        # self.info_firmware = None
-        # self.info_lanmac = None
+        self.router_info_frame = tk.Frame(master=self, bg="#FFFFFF")
+        self.router_info_frame.place(relx=0.558, rely=0.147, relwidth=0.442, relheight=0.35)
 
-        # self.router.get_isp()
-        # self.router.get_apn()
+        self.router_info_x1_textbox = tk.Text(
+            master=self.router_info_frame,
+            font=("Consolas", 12),
+            state="disabled",
+            wrap="word"
+        )
+        self.router_info_x1_textbox.place(relx=0, rely=0, relwidth=0.503, relheight=1)
 
-    def create_router_check(self):
-        pass
+        self.router_info_x2_textbox = tk.Text(
+            master=self.router_info_frame,
+            font=("Consolas", 12),
+            state="disabled",
+            wrap="word"
+        )
+        self.router_info_x2_textbox.place(relx=0.5, rely=0, relwidth=0.503, relheight=1)
+
+
+    def get_router_info(self):
+        info_ip = None
+        info_isp = None
+        info_apn = None
+        info_firmware = None
+        info_lanmac = None
+
+        ip = self.router_ip.get().strip()
+        if not self.router.is_router_active(ip):
+            return f"Router is not active"
+
+        info_ip = ip
+        if not self.router.is_connected():
+            return f"Router active on {info_ip} but not connected."
+
+        info_isp = self.router.get_isp()
+        info_apn = self.router.get_apn()
+        info_firmware = self.router.get_firmware_version()
+        info_lanmac = self.router.get_lan_mac()
+
+        lines_x1 = []
+        if info_ip: lines_x1.append(f"IP: {info_ip}\n")
+        if info_isp: lines_x1.append(f"ISP: {info_isp}\n")
+        if info_apn: lines_x1.append(f"APN: {info_apn}\n")
+        if info_firmware: lines_x1.append(f"Firmware: \n{info_firmware}\n")
+        if info_lanmac: lines_x1.append(f"LAN MAC: \n{info_lanmac}\n")
+
+        info_data_connection = self.router.get_data_connection()
+        info_sim_state = self.router.get_sim_state()
+        info_network_state = self.router.get_network_state()
+
+        lines_x2 = []
+        if info_data_connection: lines_x2.append(f"Data connection :\n{info_data_connection}\n")
+        if info_sim_state: lines_x2.append(f"SIM info :\n{info_sim_state}\n")
+        if info_network_state: lines_x2.append(f"Network state :\n{info_network_state}\n")
+
+        info_x1="\n".join(lines_x1)
+        info_x2="\n".join(lines_x2)
+
+        return info_x1, info_x2
+
+
+    # --- Copy Router Info ---
+
+    def button_for_router_info_copy(self):
+        self.copy_button = tk.Button(
+            master=self.router_info_frame,
+            text="Copy",
+            font=("Arial", 12, "bold"),
+            bg="#CCCCCC",
+            command=self._on_router_info_copy
+        )
+        self.copy_button.place(relx=0.300, rely=0.900, relwidth=0.200, relheight=0.100)
+
+
+    def _on_router_info_copy(self):
+        self.clipboard_clear()
+        text_to_copy = self.router_info_x1_textbox.get("1.0", "end-1c")
+        self.clipboard_append(text_to_copy)
+
+
+# --- Refresh Router Info ---
+
+    def button_for_router_info_refresh(self):
+        self.refresh_button = tk.Button(
+            master=self.router_info_frame,
+            text="Refresh",
+            font=("Arial", 12, "bold"),
+            bg="#CCCCCC",
+            command=self._on_router_info_refresh
+        )
+        self.refresh_button.place(relx=0.505, rely=0.900, relwidth=0.200, relheight=0.100)
+
+
+    def _on_router_info_refresh(self):
+        info_x1, info_x2 = self.get_router_info()
+
+        self.router_info_x1_textbox.config(state="normal")
+        self.router_info_x1_textbox.delete("1.0", "end")
+        self.router_info_x1_textbox.insert("end", info_x1)
+        self.router_info_x1_textbox.config(state="disabled")
+
+
+        self.router_info_x2_textbox.config(state="normal")
+        self.router_info_x2_textbox.delete("1.0", "end")
+        self.router_info_x2_textbox.insert("end", info_x2)
+        self.router_info_x2_textbox.config(state="disabled")
 
 
     #-------------------------------------------------------------
@@ -715,7 +810,7 @@ class App(tk.Tk):
         self.auto_configuration_button = tk.Button(
             master=self,
             text="Auto Configuration",
-            font=("Arial", 20),
+            font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
             command=lambda: self.run_in_thread(
                 self._on_auto_configuration
@@ -801,7 +896,7 @@ class App(tk.Tk):
         self.cancel_button = tk.Button(
             master=self,
             text="Cancel",
-            font=("Arial", 20),
+            font=conf.BUTTONS_FONT_2,
             bg="#E28C8C",
             command=self.cancel_event.set
         )
@@ -832,7 +927,7 @@ class App(tk.Tk):
 
         self.log_chat_box = tk.Text(
             master=self.log_chat_frame,
-            font=("Consolas", 9),
+            font=conf.CHAT_FONT_1,
             state="disabled",
             wrap="word",
             yscrollcommand=self.log_chat_scrollbar.set
@@ -858,7 +953,7 @@ class App(tk.Tk):
 
         self.router_ip_entry()
         self.new_password_entry()
-        self.default_password_entry()
+        self.router_password_entry()
 
         self.firmware_selection()
         self.checkbox_for_updating()
@@ -884,7 +979,8 @@ class App(tk.Tk):
         self.button_for_router_reboot()
 
         self.create_router_info()
-        self.create_router_check()
+        self.button_for_router_info_copy()
+        self.button_for_router_info_refresh()
 
         self.button_for_auto_configuration()
 
