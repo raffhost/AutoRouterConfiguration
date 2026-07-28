@@ -2,7 +2,7 @@
 
 A desktop application for automated first-time setup of Teltonika routers over a LAN cable.
 Instead of clicking through the web interface manually every time, a technician connects the
-router, fills in the required fields, and lets the tool handle the rest.
+router, fills in a few fields, and lets the tool handle the rest.
 
 ---
 
@@ -18,35 +18,31 @@ ARCTIC automates exactly that — connect the router via LAN, select the options
 
 ## Supported devices
 
-- **Teltonika RUT series** — RUT2xx, RUT36x, RUT361
-- **Teltonika TRB series** — TRB500, TRB501
+- Teltonika **RUT** series (e.g. RUT240)
+- Teltonika **TRB** series (e.g. TRB142)
 
-Both run on RutOS (based on OpenWrt). The tool communicates with the router over SSH using
-the Paramiko library. REST API support is planned for a later stage.
+Both run on RutOS (based on OpenWrt). The tool communicates with the router over SSH using the
+`paramiko` library.
 
 ---
 
 ## What the tool does
 
-1. Connects to the router via SSH (default: `root` / `admin01`)
-2. Changes the password to the company password
-3. Flashes the correct firmware for the selected model (without keeping old settings)
-4. Waits for the router to reboot, then logs in again and sets the password once more
-5. Sets the ISP profile and the correct APN for the selected mobile provider
-6. Checks that the mobile data connection is working
-
----
-
-## The app
-
-Three main actions:
-
-- **Connect** — establishes SSH connection to the router
-- **Update** — runs the full setup (firmware + password + APN)
-- **Status light** — shows green when connected, red when not (checks every second automatically)
-
-The left side of the window handles all input: firmware selection, ISP profile, mobile provider
-and APN, and the router password. The right side is reserved for a status panel (in progress).
+- **Connect / Disconnect** — establishes or closes the SSH connection to the router
+- **Update** — uploads the selected firmware, tests compatibility with the device first
+  (`sysupgrade -T`) and only flashes if the test passes, so an incompatible image can never be
+  written to the router by accident
+- **Change PW** — sets a new router password
+- **Set ISP** — switches the ISP profile (also updates APN and gateway automatically)
+- **Set APN** — sets the mobile APN manually and restarts the network interface
+- **NETRestart / Reboot** — restarts networking or reboots the router
+- **Auto Configuration** — runs the full setup in one go: connect → update firmware → wait for
+  reboot → reconnect → change password → set ISP → reconnect → set APN → reconnect. Can be
+  cancelled at any point with the **Cancel** button; the log then shows exactly which steps were
+  completed and which were not
+- **Live status panel** — shows current IP, ISP, APN, firmware version and LAN MAC address, plus
+  live checks for data connection, SIM state and network registration state (via `gsmctl`).
+  Values can be refreshed and copied to the clipboard
 
 ---
 
@@ -71,37 +67,61 @@ and APN, and the router password. The right side is reserved for a status panel 
 ## Tech stack
 
 - **Python** — main language
-- **tkinter + ttk** — desktop GUI
-- **paramiko** — SSH connection to the router
+- **tkinter + ttk** — desktop GUI (no extra installation needed)
+- **paramiko** — SSH connection and command execution
 - **JSON** — configuration data (firmware list, ISP profiles, providers/APNs)
+- **PyInstaller** — packages the app into a single Windows `.exe`
 
 ---
 
 ## File structure
 
 ```
-app.py         — GUI (main window, all user interface elements)
-router.py      — Router class (SSH connection, commands, firmware update)
-config.json    — All data: firmware files, ISP profiles, providers and APNs
+arctic.py       — GUI (main window, all user interface elements, tooltips)
+router.py       — Router class (SSH connection, commands, firmware update, status checks)
+config.py       — Labels, tooltips and fonts used in the GUI
+config.json     — Firmware list, ISP profiles, providers/APNs, firmware folder path
 ```
+
+---
+
+## Building the .exe
+
+```
+pip install pyinstaller
+pyinstaller --onefile --windowed --name ARCTIC arctic.py
+```
+
+- `--onefile` bundles everything into a single `ARCTIC.exe`
+- `--windowed` suppresses the console window (required for a tkinter GUI app)
+
+The finished executable is created under `dist/ARCTIC.exe`. **`config.json` is not bundled into
+the exe on purpose** — copy it into `dist/` next to `ARCTIC.exe` so it can still be edited by
+hand after building (e.g. to change the firmware folder path or add new ISP profiles).
+
+`build/`, `dist/` and `*.spec` are regenerated on every build and are excluded via `.gitignore`.
 
 ---
 
 ## Status
 
-Active development — internship project (Ausbildungspraktikum).
-GUI is mostly complete. Router connection via SSH is working.
-Firmware flashing and password change are the next steps.
+Core functionality complete and tested against real hardware (RUT240): connecting, firmware
+updates with compatibility testing, password/ISP/APN changes, full Auto Configuration workflow
+with cancel support, and a live status panel.
+
+Open for future improvement:
+- Editable firmware list / folder path directly from the GUI, not just via `config.json`
+- Icon for the packaged `.exe`
+- Testing across additional router models (TRB series)
 
 ---
 
-## Development history
+## Development history (high-level)
 
-| Date | What happened |
+| Week | Focus |
 |---|---|
-| 30.06.2026 | Project idea defined. Chose to automate Teltonika router setup. Created repo. |
-| 01.07.2026 | Started learning tkinter. First window with buttons and APN combobox using `.grid()`. |
-| 02.07.2026 | Restructured code, moved config to `Config.py`, removed RMS class, switched to `.grid()` layout. |
-| 03.07.2026 | Replaced `.grid()` with `.place()` for easier positioning. Added separators, ISP selection with auto IP display. Created `router.py` with paramiko skeleton. |
-| 06.07.2026 | Moved all data to `config.json`. Added provider/APN selection (dynamic, based on chosen provider). Firmware list now loaded from JSON. |
-| 07.07.2026 | Connected `Router` class to GUI. Added Connect and Update buttons, password entry field, and status light (auto-updates every second via `self.after()`). |
+| Week 2 (29.06.–03.07.) | Project idea defined, GUI library chosen (`tkinter`), first window with `.grid()` |
+| Week 3 (06.07.–10.07.) | Config moved to `config.json`, `Router` class with SSH connection, threading/queue basics |
+| Week 4 (13.07.–16.07.) | Error handling, status indicators, thread-safe log/GUI queues, workshop feedback |
+| Week 5 (20.07.–24.07.) | Auto Configuration workflow, cancel support, firmware compatibility test, structural cleanup |
+| Week 6 (27.07.–28.07.) | Live status panel (router data + SIM/network checks), packaged as `.exe`. Technically, the project is finished, but I might add something new in the future.|
