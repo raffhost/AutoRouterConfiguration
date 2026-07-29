@@ -265,15 +265,23 @@ class Router():
 
 
     def get_data_connection(self):
-        return self.run_command("gsmctl -j").strip()
+        return self.run_command("gsmctl --connstate").strip()
 
     
     def get_sim_state(self):
-        return self.run_command("gsmctl -z").strip()
+        return self.run_command("gsmctl --simstate").strip()
 
 
     def get_network_state(self):
-        return self.run_command("gsmctl -g").strip()
+        return self.run_command("gsmctl --netstate").strip()
+
+
+    def get_serial_number(self):
+        return self.run_command("gsmctl --serial").strip()
+
+
+    def get_imei(self):
+        return self.run_command("gsmctl --imei").strip()
 
 
 
