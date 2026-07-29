@@ -3,6 +3,7 @@
 build/
 dist/
 *.spec
+content/
 
 # Python bytecode cache
 __pycache__/
