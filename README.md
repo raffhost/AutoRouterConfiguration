@@ -89,7 +89,7 @@ config.json     — Firmware list, ISP profiles, providers/APNs, firmware folder
 
 ```
 pip install pyinstaller
-pyinstaller --onefile --windowed --name ARCTIC arctic.py
+pyinstaller --onefile --windowed --icon=content/icon.ico --name ARCTIC arctic.py
 ```
 
 - `--onefile` bundles everything into a single `ARCTIC.exe`
