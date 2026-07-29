@@ -731,6 +731,8 @@ class App(tk.Tk):
         info_apn = self.router.get_apn()
         info_firmware = self.router.get_firmware_version()
         info_lanmac = self.router.get_lan_mac()
+        serial_number = self.router.get_serial_number()
+        imei = self.router.get_imei()
 
         lines_x1 = []
         if info_ip: lines_x1.append(f"IP: {info_ip}\n")
@@ -738,6 +740,9 @@ class App(tk.Tk):
         if info_apn: lines_x1.append(f"APN: {info_apn}\n")
         if info_firmware: lines_x1.append(f"Firmware: \n{info_firmware}\n")
         if info_lanmac: lines_x1.append(f"LAN MAC: \n{info_lanmac}\n")
+        if serial_number: lines_x1.append(f"Serial Nummer: \n{serial_number}\n")
+        if imei and self.imei_check.get(): lines_x1.append(f"IMEI: \n{imei}\n")
+        lines_x1.append("\n\n\n")
 
         info_data_connection = self.router.get_data_connection()
         info_sim_state = self.router.get_sim_state()
@@ -747,6 +752,7 @@ class App(tk.Tk):
         if info_data_connection: lines_x2.append(f"Data connection :\n{info_data_connection}\n")
         if info_sim_state: lines_x2.append(f"SIM info :\n{info_sim_state}\n")
         if info_network_state: lines_x2.append(f"Network state :\n{info_network_state}\n")
+        lines_x2.append("\n\n\n")
 
         info_x1="\n".join(lines_x1)
         info_x2="\n".join(lines_x2)
@@ -800,6 +806,18 @@ class App(tk.Tk):
         self.router_info_x2_textbox.insert("end", info_x2)
         self.router_info_x2_textbox.config(state="disabled")
 
+
+    # --- IMEI Toggle Box Check ---
+
+    def create_imei_checkbox(self):
+        self.imei_check=tk.IntVar()
+        self.imei_checkbox = tk.Checkbutton(
+            master=self.router_info_frame,
+            text="IMEI",
+            variable=self.imei_check,
+            state="normal"
+        )
+        self.imei_checkbox.place(relx=0.750, rely=0.900, relheight=0.100)
 
     #-------------------------------------------------------------
     #   AUTOMATIC CONFIGURATION 
@@ -991,6 +1009,7 @@ class App(tk.Tk):
         self.create_router_info()
         self.button_for_router_info_copy()
         self.button_for_router_info_refresh()
+        self.create_imei_checkbox()
 
         self.button_for_auto_configuration()
 
