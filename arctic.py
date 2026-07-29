@@ -22,6 +22,8 @@ CONFIG_PATH = os.path.join(BASE_PATH, "arctic_config.json")
 with open(CONFIG_PATH, encoding="utf-8") as file:
     data = json.load(file)
 
+ROUTER_PASSWORD_LIST = data.get("ROUTER_PASSWORD_LIST", "")
+NEW_PASSWORD_LIST = data.get("NEW_PASSWORD_LIST", "")
 FIRMWARE_FOLDER = data.get("FIRMWARE_FOLDER", "")
 FIRMWARE_LIST = data['FIRMWARE_LIST']
 ISP_PROFILE_LIST = data['ISP_PROFILE_LIST']
@@ -294,10 +296,9 @@ class App(tk.Tk):
         )
         self.new_password_label.place(relx=0.01, rely=0.375)
 
-        new_pw_list=["admin01", "Start2026!"]
         self.new_password = ttk.Combobox(
             master=self,
-            values=new_pw_list,
+            values=NEW_PASSWORD_LIST,
             font=conf.LABELS_FONT_1
         )
         self.new_password.insert(0, "admin01")
@@ -319,10 +320,9 @@ class App(tk.Tk):
         )
         self.router_password_label.place(relx=0.01, rely=0.275)
 
-        def_pw_list=["admin01",]
         self.router_password = ttk.Combobox(
             master=self,
-            values=def_pw_list,
+            values=ROUTER_PASSWORD_LIST,
             font=conf.LABELS_FONT_1
         )
         self.router_password.insert(0, "admin01")
