@@ -1,0 +1,37 @@
+ARCTIC — Auto Router Configuration Tool Interface
+Personal Use License
+
+Copyright (c) 2026 Raff
+
+1. GRANT OF LICENSE
+   Permission is granted to any individual to download, install, and use
+   this software free of charge, for personal, educational, or evaluation
+   purposes only.
+
+2. RESTRICTIONS
+   Without prior written permission from the copyright holder, you may NOT:
+   a) sell, resell, sublicense, rent, or lease this software or any
+      derivative of it;
+   b) use this software for commercial purposes, including but not limited
+      to deployment within a company, organization, or as part of a paid
+      service;
+   c) distribute this software, modified or unmodified, as part of any
+      product or service offered to third parties;
+   d) remove or alter this license, or any copyright notices contained in
+      the software.
+
+3. NO WARRANTY
+   This software is provided "as is", without warranty of any kind,
+   express or implied, including but not limited to warranties of
+   merchantability, fitness for a particular purpose, and non-infringement.
+   The author is not liable for any damage resulting from the use of this
+   software, including but not limited to misconfiguration of network
+   equipment.
+
+4. TERMINATION
+   This license is automatically terminated if you violate any of the
+   above restrictions. Upon termination, you must stop using the software
+   and delete all copies in your possession.
+
+5. CONTACT
+   For commercial licensing inquiries, please contact the copyright holder.
