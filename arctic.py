@@ -1020,10 +1020,13 @@ class App(tk.Tk):
 #   ENTRY POINT
 #-------------------------------------------------------------
 
-if __name__ == "__main__":
+def main():
     router = Router()
     app = App(router)
     app.start()
+
+if __name__ == "__main__":
+    main()
 
 
 # Version 1.0
