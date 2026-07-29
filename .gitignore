@@ -5,6 +5,7 @@ dist/
 dist_exe/
 *.spec
 installer_output/
+setup_compiler_code.iss
 
 # Python bytecode cache
 __pycache__/
