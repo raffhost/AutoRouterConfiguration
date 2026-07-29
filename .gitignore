@@ -4,6 +4,7 @@ build/
 dist/
 *.spec
 content/
+installer_output/
 
 # Python bytecode cache
 __pycache__/
