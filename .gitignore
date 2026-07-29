@@ -2,6 +2,7 @@
 # never worth committing (bloats repo, produces meaningless binary diffs)
 build/
 dist/
+dist_exe/
 *.spec
 installer_output/
 
