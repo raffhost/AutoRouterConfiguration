@@ -5,6 +5,7 @@ dist/
 dist_exe/
 *.spec
 installer_output/
+arctic_router_tool.egg-info/
 setup_compiler_code.iss
 
 # Python bytecode cache
