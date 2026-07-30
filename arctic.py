@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import filedialog, simpledialog
 from datetime import datetime
 from router import Router
 import config as conf
@@ -19,15 +20,15 @@ BASE_PATH = get_base_path()
 CONFIG_PATH = os.path.join(BASE_PATH, "arctic_config.json")
 
 # Firmware, ISP and APN
-with open(CONFIG_PATH, encoding="utf-8") as file:
+with open(CONFIG_PATH, "r", encoding="utf-8") as file:
     data = json.load(file)
 
 ROUTER_PASSWORD_LIST = data.get("ROUTER_PASSWORD_LIST", "")
 NEW_PASSWORD_LIST = data.get("NEW_PASSWORD_LIST", "")
 FIRMWARE_FOLDER = data.get("FIRMWARE_FOLDER", "")
-FIRMWARE_LIST = data['FIRMWARE_LIST']
-ISP_PROFILE_LIST = data['ISP_PROFILE_LIST']
-APN_LIST = data['APN_LIST']
+FIRMWARE_LIST = data["FIRMWARE_LIST"]
+ISP_PROFILE_LIST = data["ISP_PROFILE_LIST"]
+APN_LIST = data["APN_LIST"]
 
 
 class App(tk.Tk):
@@ -38,6 +39,7 @@ class App(tk.Tk):
         # self.resizable(False, False)
         self.router = router if router is not None else Router()
         self.status_light = "✲"
+        self.custom_firmware = None
 
         # Track previous states to log only on change
         self._prev_active_state = None
@@ -228,11 +230,12 @@ class App(tk.Tk):
         )
         self.firmware_selection_help.place(relx=0.485, rely=0.625)
 
-        firmware_list = [item['Name'] for item in FIRMWARE_LIST]
+        firmware_list = [item["Version"] for item in FIRMWARE_LIST]
         self.select_firmware = ttk.Combobox(
             master=self,
             values=firmware_list,
-            font=conf.LABELS_FONT_1
+            font=conf.LABELS_FONT_1,
+            state="readonly"
         )
         self.select_firmware.place(relx=0.225, rely=0.62, relwidth=0.25)
 
@@ -251,7 +254,7 @@ class App(tk.Tk):
         )
         self.isp_help.place(relx=0.485, rely=0.725)
 
-        isp_list = [item['ISP'] for item in ISP_PROFILE_LIST]
+        isp_list = [item["ISP"] for item in ISP_PROFILE_LIST]
         self.select_isp = ttk.Combobox(
             master=self,
             values=isp_list,
@@ -277,7 +280,7 @@ class App(tk.Tk):
         self.apn_help.place(relx=0.485, rely=0.825)
 
 
-        apn_list = [item['APN'] for item in APN_LIST]
+        apn_list = [item["APN"] for item in APN_LIST]
         self.select_apn = ttk.Combobox(
             master=self,
             values=apn_list,
@@ -345,7 +348,7 @@ class App(tk.Tk):
         )
         self.router_ip_label.place(relx=0.01, rely=0.175)
 
-        ip_list = [item['IP'] for item in ISP_PROFILE_LIST]
+        ip_list = [item["IP"] for item in ISP_PROFILE_LIST]
         self.router_ip = ttk.Combobox(
             master=self,
             values=ip_list,
@@ -363,7 +366,7 @@ class App(tk.Tk):
 
     def update_ip(self, event=None):
         self.router_ip.delete(0, "end")
-        self.router_ip.insert(0, ISP_PROFILE_LIST[self.select_isp.current()]['IP'])
+        self.router_ip.insert(0, ISP_PROFILE_LIST[self.select_isp.current()]["IP"])
 
 
     #-------------------------------------------------------------
@@ -501,31 +504,40 @@ class App(tk.Tk):
 
 
     def _on_firmware_update(self):
-        ip=self.router_ip.get().strip()
+        ip = self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
             self.log_queue.put("Error: No active router.")
             return False
-        
+
         if not self.router.is_connected():
             self.log_queue.put("Error: Not connected. Press Connect first.")
             return False
         
-        if self.select_firmware.current() == -1:
-            self.log_queue.put("Error: No firmware selected.")
+        if not self.select_firmware.get():
             return False
-        
-        selected = FIRMWARE_LIST[self.select_firmware.current()]
-        current = self.router.get_firmware_version()
 
-        if self.router.is_router_updated(selected['Version']) and self.update_checkbox_state.get()==0:
-            self.log_queue.put(f"Router firmware is up to date. No update needed.")
-            self.log_queue.put(f"Current firmware: {current}\n If you still want to update, toogle checkbox on. ")
-            self.update_checkbox.config(state="normal")
-            return False
+        if self.custom_firmware:
+            selected = self.custom_firmware
+            firmware_path = selected["Path"]
+        else:
+            idx = self.select_firmware.current()
+            
+            if idx == -1:
+                self.log_queue.put("Error: No firmware selected.")
+                return False
         
-        self.log_queue.put(f"Current firmware: {current}")
-        self.log_queue.put(f"Updating to: {selected['Version']}. Please wait...")
-        firmware_path = os.path.join(FIRMWARE_FOLDER, selected['File'])
+            selected = FIRMWARE_LIST[idx]
+            firmware_path = selected["Path"]
+
+        current_firmware = self.router.get_firmware_version()
+
+        if self.router.is_router_updated(selected["Version"]) and self.update_checkbox_state.get()==0:
+            self.log_queue.put(f"Router firmware is up to date. No update needed.")
+            self.log_queue.put(f"Current firmware: {selected["Version"]}\n If you still want to update, toogle update_checkbox on. ")
+            return False
+
+        self.log_queue.put(f"Current firmware: {current_firmware}")
+        self.log_queue.put(f"Updating to: {selected["Version"]}. Please wait...")
         self.router.update(
             firmware_path=firmware_path,
             log=self.log_queue.put
@@ -538,10 +550,90 @@ class App(tk.Tk):
         self.update_checkbox = tk.Checkbutton(
             master=self,
             text="Update",
-            variable=self.update_checkbox_state,
-            state="disabled"
+            variable=self.update_checkbox_state
         )
         self.update_checkbox.place(relx=0.225, rely=0.675)
+
+
+    # --- Browse Firmware ---
+
+    def button_for_browse_firmware(self):
+        self.browse_button = tk.Button(
+            master=self,
+            text="Browse",
+            font=conf.BUTTONS_FONT_1,
+            bg="#CCCCCC",
+            command=self._on_browse_firmware
+        )
+        self.browse_button.place(relx=0.375, rely=0.6775, relwidth=0.100, relheight=0.035)
+
+
+    def _on_browse_firmware(self):
+        path = filedialog.askopenfilename(
+            title="Select firmware file",
+            filetypes=[("Firmware files", "*.bin"), ("All files", "*.*")]
+        )
+        if not path: # If dialog closed
+            return 
+
+        file = os.path.basename(path) # RUT2_R_GPL_00.07.06.19_WEBUI.bin
+        file_version = file.removesuffix("_WEBUI.bin").removesuffix("_fresh_install.bin").removesuffix(".bin") # RUT2_R_GPL_00.07.06.19
+
+        self.custom_firmware = {
+            "Version": file_version,
+            "File": file,
+            "Path": path # Absolute Path
+        }
+
+        self.select_firmware.set(file_version)
+        self.check_for_saved_firmware()
+
+
+    # --- Save Custom Firmware to JSON ---
+
+    def button_for_saving_firmware_in_json(self):
+        self.save_firmware_button = tk.Button(
+            master=self,
+            text="Save",
+            font=conf.BUTTONS_FONT_1,
+            bg="#CCCCCC",
+            command=self._on_save_firmware_to_json
+        )
+        self.save_firmware_button.place(relx=0.29, rely=0.6775, relwidth=0.0750, relheight=0.035)
+    
+        self.select_firmware.bind("<<ComboboxSelected>>", self._on_firmware_combobox_select)
+    
+    
+    def _on_save_firmware_to_json(self):
+        if not self.check_for_saved_firmware():
+            return None
+        FIRMWARE_LIST.append(self.custom_firmware)
+        with open(CONFIG_PATH, "w", encoding="utf-8") as file:
+            json.dump(data, file, indent=4)
+
+        self.select_firmware["Values"] = [item["Version"] for item in FIRMWARE_LIST]
+        self.log_queue.put("Saved firmware to json")
+
+
+    def _on_firmware_combobox_select(self, event=None):
+        # If the user manually selects a file via "Browse" but then changes their mind and selects 
+        # something from the drop-down list, `custom_firmware` needs to be reset to `None`.
+        self.custom_firmware = None
+
+
+    # --- Check If Custom Firmware Is Already Saved ---
+
+    def check_for_saved_firmware(self) -> bool:
+        if not self.custom_firmware:
+            return False
+
+        for firmware in FIRMWARE_LIST:
+            if firmware["Version"] == self.custom_firmware["Version"]:
+                self.log_queue.put("Firmware was already saved before")
+                return False
+
+        return True
+
 
     # --- Set/change ISP profile ---
 
@@ -865,7 +957,8 @@ class App(tk.Tk):
             ("UPDATE",
             self._on_firmware_update,
             lambda: self.router.is_router_updated(
-                FIRMWARE_LIST[self.select_firmware.current()]['Version']
+                self.custom_firmware["Version"] if self.custom_firmware
+                else FIRMWARE_LIST[self.select_firmware.current()]["Version"]
                 )
             ),
             ("RECONNECTION",
@@ -1000,6 +1093,9 @@ class App(tk.Tk):
         self.button_for_disconnect()
 
         self.button_for_updating_firmware()
+        self.button_for_browse_firmware()
+        self.button_for_saving_firmware_in_json()
+
         self.button_for_updating_isp()
         self.button_for_updating_apn()
 
