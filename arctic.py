@@ -611,7 +611,7 @@ class App(tk.Tk):
         with open(CONFIG_PATH, "w", encoding="utf-8") as file:
             json.dump(data, file, indent=4)
 
-        self.select_firmware["Values"] = [item["Version"] for item in FIRMWARE_LIST]
+        self.select_firmware.configure(values=[item["Version"] for item in FIRMWARE_LIST])
         self.log_queue.put("Saved firmware to json")
 
 
