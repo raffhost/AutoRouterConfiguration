@@ -2,7 +2,7 @@
 # never worth committing (bloats repo, produces meaningless binary diffs)
 build/
 dist/
-dist_exe/
+ARCTIC.exe
 *.spec
 installer_output/
 arctic_router_tool.egg-info/
