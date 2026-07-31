@@ -37,8 +37,9 @@ Access Point Name (APN) is required for mobile data.
 #----------------------
 #        FONTS
 #----------------------
-LABELS_FONT_1 = ("Arial", 20)
+LABELS_FONT_1 = ("Arial", 18)
 LABELS_FONT_2 = ("Arial", 26, "bold")
+COMBOBOX_FONT_1 = ("Arial", 20)
 BUTTONS_FONT_1 = ("Arial", 11, "bold")
 BUTTONS_FONT_2 = ("Arial", 14, "bold")
 CHAT_FONT_1 = ("Consolas", 9)
