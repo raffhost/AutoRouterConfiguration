@@ -92,13 +92,13 @@ be edited by hand (e.g. to add ISP profiles) without rebuilding the exe.
 ## File structure
 
 ```
-content/
-└── icon.ico           — Application icon
+
 arctic.py              — GUI (main window, all UI elements, tooltips)
 router.py              — Router class (SSH connection, commands, firmware update, status checks)
 config.py              — GUI configuration (labels, tooltips, fonts)
 arctic_config.json     — Firmware list, ISP profiles, providers/APNs
 build_exe.bat          — One-click build script (PyInstaller)
+icon.ico               — Application icon
 README.md              — Project documentation
 LICENSE.txt            — License information
 .gitignore             — Git ignored files configuration

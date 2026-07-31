@@ -49,7 +49,7 @@ echo.
 REM --- Actual build command ---
 REM --distpath . places the finished .exe directly in this folder,
 REM next to arctic.py and the other project files.
-python -m PyInstaller --onefile --windowed --icon=content\icon.ico --distpath . --name ARCTIC arctic.py
+python -m PyInstaller --onefile --windowed --icon=icon.ico --distpath . --name ARCTIC arctic.py
 
 REM --- Check whether the build actually succeeded ---
 if not exist "ARCTIC.exe" (
