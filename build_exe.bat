@@ -23,6 +23,17 @@ if errorlevel 1 (
 
 
 
+REM --- Install dependencies from pyproject.toml ---
+echo [INFO] Installing required dependencies...
+python -m pip install -e .
+if errorlevel 1 (
+    echo [ERROR] Failed to install dependencies.
+    pause
+    exit /b 1
+)
+
+
+
 REM --- Check whether PyInstaller is installed, install it if missing ---
 python -m PyInstaller --version >nul 2>&1
 if errorlevel 1 (
