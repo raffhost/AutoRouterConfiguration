@@ -12,14 +12,12 @@ build/
 dist/
 *.spec
 InnoSetup/
-PyPI/
 *.egg-info/
 
 
 # Application files
 *.exe
 *.iss
-*.toml
 
 
 # Local, machine-specific firmware files (not meant to be public/shared)
