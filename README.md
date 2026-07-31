@@ -56,21 +56,20 @@ Both run on RutOS (based on OpenWrt). The tool communicates with the router over
 ## Building from source
 
 Requires Python 3.10+.
-
+Install dependencies and run directly
 ```
-pip install -r requirements.txt
-```
-
-Run directly:
-```
+pip install .
 python arctic.py
 ```
+
+OR
 
 Build a standalone `.exe` (Windows):
 ```
 build_exe.bat
 ```
-This installs PyInstaller automatically if it's missing, builds `ARCTIC.exe` in the project
+
+This installs PyInstaller and paramiko automatically if it's missing, builds `ARCTIC.exe` in the project
 folder, and cleans up temporary build files afterwards. The `arctic_config.json` next to it can
 be edited by hand (e.g. to add ISP profiles) without rebuilding the exe.
 
