@@ -92,7 +92,6 @@ be edited by hand (e.g. to add ISP profiles) without rebuilding the exe.
 ## File structure
 
 ```
-
 arctic.py              — GUI (main window, all UI elements, tooltips)
 router.py              — Router class (SSH connection, commands, firmware update, status checks)
 config.py              — GUI configuration (labels, tooltips, fonts)
@@ -102,7 +101,6 @@ icon.ico               — Application icon
 README.md              — Project documentation
 LICENSE.txt            — License information
 .gitignore             — Git ignored files configuration
-
 ```
 
 ---
@@ -116,15 +114,3 @@ support, custom firmware file selection, and a live status panel.
 Open for future improvement:
 - Editable ISP/APN profiles directly from the GUI, not just via `arctic_config.json`
 - Testing across additional router models (TRB series)
-
----
-
-## Development history (high-level)
-
-| Week | Focus |
-|---|---|
-| Week 2–3 | Project idea, GUI basics, config externalized, SSH connection |
-| Week 4 | Error handling, thread-safe queues, status indicators |
-| Week 5 | Auto Configuration workflow with cancel support, firmware compatibility test |
-| Week 6 | Live status panel, packaged as `.exe`, non-commercial license, Windows installer |
-| Week 7 | Free firmware file selection (no more fixed folder), first public release (V1.1.0) |
