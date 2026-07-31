@@ -11,7 +11,8 @@ __pycache__/
 build/
 dist/
 *.spec
-installer_output/
+InnoSetup/
+PyPI/
 *.egg-info/
 
 
