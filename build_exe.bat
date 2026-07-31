@@ -89,6 +89,11 @@ if exist "ARCTIC.spec" (
     echo [OK] Removed ARCTIC.spec
 )
 
+if exist "arctic_router_tool.egg-info" (
+    rmdir /s /q arctic_router_tool.egg-info
+    echo [OK] Removed arctic_router_tool.egg-info
+)
+
 
 
 echo.
