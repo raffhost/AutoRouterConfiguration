@@ -25,7 +25,6 @@ with open(CONFIG_PATH, "r", encoding="utf-8") as file:
 
 ROUTER_PASSWORD_LIST = data.get("ROUTER_PASSWORD_LIST", "")
 NEW_PASSWORD_LIST = data.get("NEW_PASSWORD_LIST", "")
-FIRMWARE_FOLDER = data.get("FIRMWARE_FOLDER", "")
 FIRMWARE_LIST = data["FIRMWARE_LIST"]
 ISP_PROFILE_LIST = data["ISP_PROFILE_LIST"]
 APN_LIST = data["APN_LIST"]
@@ -234,7 +233,7 @@ class App(tk.Tk):
         self.select_firmware = ttk.Combobox(
             master=self,
             values=firmware_list,
-            font=conf.LABELS_FONT_1,
+            font=conf.COMBOBOX_FONT_1,
             state="readonly"
         )
         self.select_firmware.place(relx=0.225, rely=0.62, relwidth=0.25)
@@ -258,7 +257,7 @@ class App(tk.Tk):
         self.select_isp = ttk.Combobox(
             master=self,
             values=isp_list,
-            font=conf.LABELS_FONT_1
+            font=conf.COMBOBOX_FONT_1
         )
         self.select_isp.place(relx=0.225, rely=0.72, relwidth=0.25)
 
@@ -284,7 +283,7 @@ class App(tk.Tk):
         self.select_apn = ttk.Combobox(
             master=self,
             values=apn_list,
-            font=conf.LABELS_FONT_1
+            font=conf.COMBOBOX_FONT_1
             )
         self.select_apn.place(relx=0.225, rely=0.82, relwidth=0.25)
 
@@ -302,7 +301,7 @@ class App(tk.Tk):
         self.new_password = ttk.Combobox(
             master=self,
             values=NEW_PASSWORD_LIST,
-            font=conf.LABELS_FONT_1
+            font=conf.COMBOBOX_FONT_1
         )
         self.new_password.insert(0, "admin01")
         self.new_password.place(relx=0.22, rely=0.375, relwidth=0.25)
@@ -326,7 +325,7 @@ class App(tk.Tk):
         self.router_password = ttk.Combobox(
             master=self,
             values=ROUTER_PASSWORD_LIST,
-            font=conf.LABELS_FONT_1
+            font=conf.COMBOBOX_FONT_1
         )
         self.router_password.insert(0, "admin01")
         self.router_password.place(relx=0.22, rely=0.275, relwidth=0.25)
@@ -352,7 +351,7 @@ class App(tk.Tk):
         self.router_ip = ttk.Combobox(
             master=self,
             values=ip_list,
-            font=conf.LABELS_FONT_1
+            font=conf.COMBOBOX_FONT_1
         )
         self.router_ip.insert(0, "192.168.1.1")
         self.router_ip.place(relx=0.22, rely=0.175, relwidth=0.25)
@@ -431,7 +430,7 @@ class App(tk.Tk):
             bg="#CCCCCC",
             command=self._on_change_password
         )
-        self.change_password_button.place(relx=0.16, rely=0.5225, relwidth=0.275, relheight=0.051)
+        self.change_password_button.place(relx=0.16, rely=0.5225, relwidth=0.125, relheight=0.051)
 
 
     def _on_change_password(self) -> bool:
@@ -463,12 +462,12 @@ class App(tk.Tk):
     def button_for_disconnect(self):
         self.connect_button = tk.Button(
             master=self,
-            text="Stop",
+            text="Disconnect",
             font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
             command=self._on_disconnect
         )
-        self.connect_button.place(relx=0.46, rely=0.5225, relwidth=0.075, relheight=0.051)
+        self.connect_button.place(relx=0.31, rely=0.5225, relwidth=0.125, relheight=0.051)
 
     def _on_disconnect(self):
         ip = self.router_ip.get().strip()
