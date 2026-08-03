@@ -17,6 +17,7 @@ InnoSetup/
 
 # Application files
 *.exe
+*.toml
 *.iss
 
 
