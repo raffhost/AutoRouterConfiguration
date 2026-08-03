@@ -53,6 +53,16 @@ if errorlevel 1 (
 
 
 
+REM --- Check whether an old ARCTIC.exe already exists and remove it ---
+REM This prevents accidentally testing a stale build if PyInstaller
+REM were to fail silently or get interrupted.
+if exist "ARCTIC.exe" (
+    echo [INFO] Removing previous ARCTIC.exe...
+    del /q ARCTIC.exe
+)
+
+
+
 echo.
 echo Building ARCTIC.exe, please wait...
 echo.
