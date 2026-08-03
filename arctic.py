@@ -53,7 +53,12 @@ class App(tk.Tk):
         self.log_queue = queue.Queue()
         self.gui_queue = queue.Queue()
         self.button_queue = queue.Queue()
-        self.after(100, self._process_queues)
+
+        # Queue active status check
+        self._queue_running = True
+
+        # Starts a single background thread
+        threading.Thread(target=self._process_queues, daemon=True).start()
         
 
     #-------------------------------------------------------------
@@ -61,28 +66,29 @@ class App(tk.Tk):
     #   (Start background threads, process log and GUI queues)
     #-------------------------------------------------------------
 
-    def run_in_thread(self, func, *args):
-        # Starts a background thread
-        threading.Thread(target=func, args=args, daemon=True).start()
-
-
     def _process_queues(self):
-        # Queue for logs
-        while not self.log_queue.empty():
-            message = self.log_queue.get_nowait()
-            self.write_in_log_chat(message)
+        while self._queue_running: # Keep running until the application is closed
+            # Process all items in the queues until they are empty
+            processed = False
 
-        # Queue for GUI
-        while not self.gui_queue.empty():
-            func = self.gui_queue.get_nowait()
-            func()
+            while not self.log_queue.empty():
+                message = self.log_queue.get_nowait()
+                self.after(0, lambda: self.write_in_log_chat(message))
+                processed = True
 
-        # Queue for buttons
-        while not self.button_queue.empty():
-            func = self.button_queue.get_nowait()
-            func()
+            while not self.gui_queue.empty():
+                func = self.gui_queue.get_nowait()
+                self.after(0, func)
+                processed = True
 
-        self.after(100, self._process_queues)
+            while not self.button_queue.empty():
+                func = self.button_queue.get_nowait()
+                func()
+                processed = True
+
+            # If no items were processed, sleep briefly to avoid busy waiting
+            if not processed:
+                time.sleep(0.01)
 
 
     #-------------------------------------------------------------
@@ -139,7 +145,7 @@ class App(tk.Tk):
 
 
     def refresh_active(self):
-        self.run_in_thread(self._check_active)
+        self.after(0,self._check_active)
         self.after(1000, self.refresh_active)
 
 
