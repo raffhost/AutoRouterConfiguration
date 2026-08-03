@@ -395,15 +395,15 @@ class App(tk.Tk):
         password = self.router_password.get().strip()
 
         if not self.router.is_router_active(ip):
-            self.log_queue.put("Error: No active router.")
+            self.log_queue.put("[ERROR]: No active router.")
             return False
             
         if not ip:
-            self.log_queue.put("Error: Router IP is empty.")
+            self.log_queue.put("[ERROR]: Router IP is empty.")
             return False
         
         if not password:
-            self.log_queue.put("Error: router password is empty.")
+            self.log_queue.put("[ERROR]: router password is empty.")
             return False
 
         self.router.connect(
@@ -440,16 +440,16 @@ class App(tk.Tk):
     def _on_change_password(self) -> bool:
         ip=self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("Error: No active router.")
+            self.log_queue.put("[ERROR]: No active router.")
             return False
 
         if not self.router.is_connected():
-            self.log_queue.put("Error: Not connected. Press Connect first.")
+            self.log_queue.put("[ERROR]: Not connected. Press Connect first.")
             return False
         
         password = self.new_password.get().strip()
         if not password:
-            self.log_queue.put("Error: New password is empty.")
+            self.log_queue.put("[ERROR]: New password is empty.")
             return False
 
         def on_password_changed():
@@ -489,15 +489,15 @@ class App(tk.Tk):
     def _on_disconnect(self):
         ip = self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("Error: No active router.")
+            self.log_queue.put("[ERROR]: No active router.")
             return False
 
         if not self.router.is_connected():
-            self.log_queue.put("Error: Not connected. Press Connect first.")
+            self.log_queue.put("[ERROR]: Not connected. Press Connect first.")
             return False
     
         if not ip:
-            self.log_queue.put("Error: Router IP is empty.")
+            self.log_queue.put("[ERROR]: Router IP is empty.")
             return False
 
         self.router.disconnect(
@@ -522,11 +522,11 @@ class App(tk.Tk):
     def _on_firmware_update(self):
         ip = self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("Error: No active router.")
+            self.log_queue.put("[ERROR]: No active router.")
             return False
 
         if not self.router.is_connected():
-            self.log_queue.put("Error: Not connected. Press Connect first.")
+            self.log_queue.put("[ERROR]: Not connected. Press Connect first.")
             return False
         
         if not self.select_firmware.get():
@@ -539,7 +539,7 @@ class App(tk.Tk):
             idx = self.select_firmware.current()
             
             if idx == -1:
-                self.log_queue.put("Error: No firmware selected.")
+                self.log_queue.put("[ERROR]: No firmware selected.")
                 return False
         
             selected = FIRMWARE_LIST[idx]
@@ -667,16 +667,16 @@ class App(tk.Tk):
     def _on_change_isp(self):
         ip=self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("Error: No active router.")
+            self.log_queue.put("[ERROR]: No active router.")
             return False
         
         if not self.router.is_connected():
-            self.log_queue.put("Error: Not connected. Press Connect first.")
+            self.log_queue.put("[ERROR]: Not connected. Press Connect first.")
             return False
         
         isp = self.select_isp.get().strip()
         if not isp:
-            self.log_queue.put("Error: No ISP profile selected.")
+            self.log_queue.put("[ERROR]: No ISP profile selected.")
             return False
         
         if self.router.is_isp_changed(isp):
@@ -694,7 +694,7 @@ class App(tk.Tk):
                 return False
             
         except Exception as e:
-            self.log_queue.put(f"Error occurred while changing ISP: {e}")
+            self.log_queue.put(f"[ERROR]: Something went wrong while changing ISP: {e}")
             return False
         
         finally:
@@ -719,16 +719,16 @@ class App(tk.Tk):
     def _on_change_apn(self) -> bool:
         ip=self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("Error: No active router.")
+            self.log_queue.put("[ERROR]: No active router.")
             return False
         
         if not self.router.is_connected():
-            self.log_queue.put("Error: Not connected. Press Connect first.")
+            self.log_queue.put("[ERROR]: Not connected. Press Connect first.")
             return False
 
         apn = self.select_apn.get().strip()
         if not apn:
-            self.log_queue.put("Error: No APN selected or entered.")
+            self.log_queue.put("[ERROR]: No APN selected or entered.")
             return False
 
         self.router.change_apn(
@@ -754,11 +754,11 @@ class App(tk.Tk):
     def _on_router_restart(self) -> bool:
         ip=self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("Error: No active router.")
+            self.log_queue.put("[ERROR]: No active router.")
             return False
 
         if not self.router.is_connected():
-            self.log_queue.put("Error: Not connected. Press Connect first.")
+            self.log_queue.put("[ERROR]: Not connected. Press Connect first.")
             return False
         
         self.router.save_and_restart_network(
@@ -783,11 +783,11 @@ class App(tk.Tk):
     def _on_router_reboot(self) -> bool:
         ip=self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("Error: No active router.")
+            self.log_queue.put("[ERROR]: No active router.")
             return False
 
         if not self.router.is_connected():
-            self.log_queue.put("Error: Not connected. Press Connect first.")
+            self.log_queue.put("[ERROR]: Not connected. Press Connect first.")
             return False
         
         self.router.reboot(
@@ -966,7 +966,7 @@ class App(tk.Tk):
     def _on_auto_configuration(self) -> bool:
         ip=self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("Error: No active router.")
+            self.log_queue.put("[ERROR]: No active router.")
             return False
 
         self.cancel_event.clear()
