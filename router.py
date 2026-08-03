@@ -52,7 +52,7 @@ class Router():
             try:
                 func(*args, **kwargs)
             except Exception as e:
-                print(f"Queue error: {e}")
+                print(f"[ERROR] Queue: {e}")
             finally:
                 self.threading_busy.clear()
                 self.task_queue.task_done()
@@ -70,8 +70,8 @@ class Router():
         self.add_to_queue(self._update_process, firmware_path, log)
 
 
-    def change_password(self, new_password, log=None):
-        self.add_to_queue(self._change_password_process, new_password, log)
+    def change_password(self, new_password, log=None, on_success=None):
+        self.add_to_queue(self._change_password_process, new_password, log, on_success)
 
 
     def change_isp(self, isp, log=None):
@@ -103,7 +103,7 @@ class Router():
                     log(f"\n{self.get_banner()}")
         
         except Exception as e:
-            if log: log(f"Connection failed: {e}")
+            if log: log(f"[ERROR] Connection failed: {e}")
 
 
     def _update_process(self, firmware_path, log=None):
@@ -118,7 +118,7 @@ class Router():
         if exit_code != 0:
             if log:
                 log("Update aborted: firmware incompatible with this device.")
-                log(f"Router said: {(err or out).strip()}")
+                log(f"[ERROR] Router: {(err or out).strip()}")
             return
 
         if log: log("Firmware compatible. Starting update...")
@@ -126,13 +126,33 @@ class Router():
         if log: log("Flashing firmware... Router may reboot.")
 
 
-    def _change_password_process(self, new_password, log=None):
+    def _change_password_process(self, new_password, log=None, on_success=None):
         # Change root password on router
         if log: log("Changing password...")
-        self.run_command(f"echo -e '{new_password}\n{new_password}\n' | passwd root")
-        username = self.get_username()  # Mostly just "admin"
-        self.run_command(f"echo -e '{new_password}\n{new_password}\n' | passwd {username}")
-        
+
+        exit_code, out, err = self.run_command_checked(
+            f"echo -e '{new_password}\n{new_password}\n' | passwd root"
+        )
+        if exit_code != 0:
+            if log:
+                error_text = (err or out).strip()
+                log(f"[ERROR] Root:{error_text}")
+            return
+
+        username = self.get_username().strip()
+        if username:
+            exit_code, out, err = self.run_command_checked(
+                f"echo -e '{new_password}\n{new_password}\n' | passwd {username}"
+            )
+            if exit_code != 0:
+                if log:
+                    error_text = (err or out).strip()
+                    log(f"[ERROR] {username}:{error_text}")
+                return
+
+        if on_success:
+            on_success()
+
         if log: log(f"Password changed to {new_password} successfully.")
 
 
