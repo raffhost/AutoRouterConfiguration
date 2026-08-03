@@ -364,8 +364,12 @@ class App(tk.Tk):
 
 
     def update_ip(self, event=None):
-        self.router_ip.delete(0, "end")
-        self.router_ip.insert(0, ISP_PROFILE_LIST[self.select_isp.current()]["IP"])
+        self.gui_queue.put(
+            lambda: (
+                self.router_ip.delete(0, "end"),
+                self.router_ip.insert(0, ISP_PROFILE_LIST[self.select_isp.current()]["IP"])
+            )
+        )
 
 
     #-------------------------------------------------------------
@@ -447,14 +451,27 @@ class App(tk.Tk):
         if not password:
             self.log_queue.put("Error: New password is empty.")
             return False
-        
-        self.router_password.delete(0, "end")
-        self.router_password.insert(0, self.new_password.get())
+
+        def on_password_changed():
+            # Update password if no exception occurred during the password change
+            self._update_router_password_combobox(password)
+
         self.router.change_password(
             new_password=password,
-            log=self.log_queue.put
+            log=self.log_queue.put,
+            on_success=on_password_changed
         )
         return True
+
+
+    def _update_router_password_combobox(self, new_password):
+        self.gui_queue.put(
+            lambda: (
+                self.router_password.delete(0, "end"),
+                self.router_password.insert(0, new_password)
+            )
+        )
+
 
 
     # --- Router disconnect ---
@@ -669,13 +686,15 @@ class App(tk.Tk):
 
         try:
             self.router.change_isp(
-            isp=isp,
-            log=self.log_queue.put
+                isp=isp,
+                log=self.log_queue.put
             )
 
             if not self.router.is_isp_changed(isp):
                 return False
-        except:
+            
+        except Exception as e:
+            self.log_queue.put(f"Error occurred while changing ISP: {e}")
             return False
         
         finally:
@@ -812,11 +831,11 @@ class App(tk.Tk):
 
         ip = self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            return f"Router is not active"
+            return "Router is not active", ""
 
         info_ip = ip
         if not self.router.is_connected():
-            return f"Router active on {info_ip} but not connected."
+            return f"Router active on {info_ip} but not connected.", ""
 
         info_isp = self.router.get_isp()
         info_apn = self.router.get_apn()
@@ -885,17 +904,23 @@ class App(tk.Tk):
 
     def _on_router_info_refresh(self):
         info_x1, info_x2 = self.get_router_info()
-
-        self.router_info_x1_textbox.config(state="normal")
-        self.router_info_x1_textbox.delete("1.0", "end")
-        self.router_info_x1_textbox.insert("end", info_x1)
-        self.router_info_x1_textbox.config(state="disabled")
+        self._update_router_info_textboxes(info_x1, info_x2)
 
 
-        self.router_info_x2_textbox.config(state="normal")
-        self.router_info_x2_textbox.delete("1.0", "end")
-        self.router_info_x2_textbox.insert("end", info_x2)
-        self.router_info_x2_textbox.config(state="disabled")
+    def _update_router_info_textboxes(self, info_x1, info_x2):
+        self.gui_queue.put(
+            lambda: (
+                self.router_info_x1_textbox.config(state="normal"),
+                self.router_info_x1_textbox.delete("1.0", "end"),
+                self.router_info_x1_textbox.insert("end", info_x1),
+                self.router_info_x1_textbox.config(state="disabled"),
+
+                self.router_info_x2_textbox.config(state="normal"),
+                self.router_info_x2_textbox.delete("1.0", "end"),
+                self.router_info_x2_textbox.insert("end", info_x2),
+                self.router_info_x2_textbox.config(state="disabled")
+            )
+        )
 
 
     # --- IMEI Toggle Box Check ---
