@@ -237,7 +237,8 @@ class Router():
 
 
     def get_banner(self) -> str:
-        return self.run_command("cat /etc/banner")
+        # "cat /etc/banner" doesn't return DEVICE_NAME and KERNEL_VERSION
+        return self.run_command("source /etc/profile")
 
 
     def get_firmware_version(self) -> str:
