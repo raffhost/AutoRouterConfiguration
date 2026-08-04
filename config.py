@@ -44,3 +44,9 @@ BUTTONS_FONT_1 = ("Arial", 11, "bold")
 BUTTONS_FONT_2 = ("Arial", 14, "bold")
 CHAT_FONT_1 = ("Consolas", 9)
 CHAT_FONT_2 = ("Consolas", 12)
+
+#----------------------
+#       MISC
+#----------------------
+BUTTONS_BG_COLOR = "#EEEEEE"
+BUTTONS_FG_COLOR = "#000000"
