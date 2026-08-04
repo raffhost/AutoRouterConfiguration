@@ -1016,7 +1016,7 @@ class App(tk.Tk):
         
         steps = [ # label, func, check
             ("CONNECTION",
-            lambda: self._on_connect(show_banner=True),
+            lambda: self._on_connect(show_banner=True) if not self.router.is_connected() else None,
             self.router.is_connected
             ),
             ("UPDATE",
