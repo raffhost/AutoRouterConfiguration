@@ -52,43 +52,32 @@ class App(tk.Tk):
         # Queues used to safely pass data from background threads to the GUI thread
         self.log_queue = queue.Queue()
         self.gui_queue = queue.Queue()
-        self.button_queue = queue.Queue()
-
-        # Queue active status check
-        self._queue_running = True
-
-        # Starts a single background thread
-        threading.Thread(target=self._process_queues, daemon=True).start()
+        self.after(100, self._process_queues)
         
+
 
     #-------------------------------------------------------------
     #   INITIALIZATION AND THREADING
     #   (Start background threads, process log and GUI queues)
     #-------------------------------------------------------------
 
+    def run_in_thread(self, func, *args):
+        # Run in background thread 
+        threading.Thread(target=func, args=args, daemon=True).start()
+
+
     def _process_queues(self):
-        while self._queue_running: # Keep running until the application is closed
-            # Process all items in the queues until they are empty
-            processed = False
+        # Queue for logs
+        while not self.log_queue.empty():
+            message = self.log_queue.get_nowait()
+            self.write_in_log_chat(message)
 
-            while not self.log_queue.empty():
-                message = self.log_queue.get_nowait()
-                self.after(0, lambda: self.write_in_log_chat(message))
-                processed = True
-
-            while not self.gui_queue.empty():
-                func = self.gui_queue.get_nowait()
-                self.after(0, func)
-                processed = True
-
-            while not self.button_queue.empty():
-                func = self.button_queue.get_nowait()
-                func()
-                processed = True
-
-            # If no items were processed, sleep briefly to avoid busy waiting
-            if not processed:
-                time.sleep(0.01)
+        # Queue for GUI
+        while not self.gui_queue.empty():
+            func = self.gui_queue.get_nowait()
+            func()
+        
+        self.after(100, self._process_queues)
 
 
     #-------------------------------------------------------------
@@ -145,7 +134,7 @@ class App(tk.Tk):
 
 
     def refresh_active(self):
-        self.after(0,self._check_active)
+        self.run_in_thread(self._check_active)
         self.after(1000, self.refresh_active)
 
 
@@ -397,7 +386,7 @@ class App(tk.Tk):
             text="Connect",
             font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
-            command=lambda: self.button_queue.put(
+            command=lambda: self.run_in_thread(
                 lambda: self._on_connect(show_banner=True)
             )
         )
@@ -446,7 +435,7 @@ class App(tk.Tk):
             text="Change PW",
             font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
-            command=lambda: self.button_queue.put(self._on_change_password)
+            command=lambda: self.run_in_thread(self._on_change_password)
         )
         self.change_password_button.place(relx=0.16, rely=0.5225, relwidth=0.125, relheight=0.051)
 
@@ -496,7 +485,7 @@ class App(tk.Tk):
             text="Disconnect",
             font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
-            command=lambda: self.button_queue.put(self._on_disconnect)
+            command=lambda: self.run_in_thread(self._on_disconnect)
         )
         self.connect_button.place(relx=0.31, rely=0.5225, relwidth=0.125, relheight=0.051)
 
@@ -528,7 +517,7 @@ class App(tk.Tk):
             text="Update",
             font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
-            command=lambda: self.button_queue.put(self._on_firmware_update)
+            command=lambda: self.run_in_thread(self._on_firmware_update)
         )
         self.update_button.place(relx=0.01, rely=0.927, relwidth=0.125, relheight=0.051)
 
@@ -593,7 +582,7 @@ class App(tk.Tk):
             text="Browse",
             font=conf.BUTTONS_FONT_1,
             bg="#CCCCCC",
-            command=lambda: self.button_queue.put(self._on_browse_firmware)
+            command=lambda: self.run_in_thread(self._on_browse_firmware)
         )
         self.browse_button.place(relx=0.375, rely=0.6775, relwidth=0.100, relheight=0.035)
 
@@ -627,7 +616,7 @@ class App(tk.Tk):
             text="Save",
             font=conf.BUTTONS_FONT_1,
             bg="#CCCCCC",
-            command=lambda: self.button_queue.put(self._on_save_firmware_to_json)
+            command=lambda: self.run_in_thread(self._on_save_firmware_to_json)
         )
         self.save_firmware_button.place(relx=0.29, rely=0.6775, relwidth=0.0750, relheight=0.035)
     
@@ -673,7 +662,7 @@ class App(tk.Tk):
             text="Set ISP",
             font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
-            command=lambda: self.button_queue.put(self._on_change_isp)
+            command=lambda: self.run_in_thread(self._on_change_isp)
         )
         self.isp_button.place(relx=0.16, rely=0.927, relwidth=0.125, relheight=0.051)
 
@@ -725,7 +714,7 @@ class App(tk.Tk):
             text="Set APN",
             font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
-            command=lambda: self.button_queue.put(self._on_change_apn)
+            command=lambda: self.run_in_thread(self._on_change_apn)
         )
         self.apn_button.place(relx=0.31, rely=0.927, relwidth=0.125, relheight=0.051)
 
@@ -760,7 +749,7 @@ class App(tk.Tk):
             text="NETRestart",
             font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
-            command=lambda: self.button_queue.put(self._on_router_restart)
+            command=lambda: self.run_in_thread(self._on_router_restart)
         )
         self.router_restart_button.place(relx=0.600, rely=0.927, relwidth=0.150, relheight=0.051)
 
@@ -789,7 +778,7 @@ class App(tk.Tk):
             text="Reboot",
             font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
-            command=lambda: self.button_queue.put(self._on_router_reboot)
+            command=lambda: self.run_in_thread(self._on_router_reboot)
         )
         self.router_reboot_button.place(relx=0.800, rely=0.927, relwidth=0.150, relheight=0.051)
 
@@ -892,7 +881,7 @@ class App(tk.Tk):
             text="Copy",
             font=("Arial", 12, "bold"),
             bg="#CCCCCC",
-            command=lambda: self.button_queue.put(self._on_router_info_copy)
+            command=lambda: self.run_in_thread(self._on_router_info_copy)
         )
         self.copy_button.place(relx=0.300, rely=0.900, relwidth=0.200, relheight=0.100)
 
@@ -911,7 +900,7 @@ class App(tk.Tk):
             text="Refresh",
             font=("Arial", 12, "bold"),
             bg="#CCCCCC",
-            command=lambda: self.button_queue.put(self._on_router_info_refresh)
+            command=lambda: self.run_in_thread(self._on_router_info_refresh)
         )
         self.refresh_button.place(relx=0.505, rely=0.900, relwidth=0.200, relheight=0.100)
 
@@ -970,7 +959,9 @@ class App(tk.Tk):
             text="Auto Configuration",
             font=conf.BUTTONS_FONT_2,
             bg="#CCCCCC",
-            command=lambda: self.button_queue.put(self._on_auto_configuration)
+            command=lambda: self.run_in_thread(
+                self._on_auto_configuration
+            )
         )
         self.auto_configuration_button.place(relx=0.600, rely=0.5225,relwidth=0.350, relheight=0.051)
 
@@ -1055,7 +1046,7 @@ class App(tk.Tk):
             text="Cancel",
             font=conf.BUTTONS_FONT_2,
             bg="#E28C8C",
-            command=lambda: self.gui_queue.put(self.cancel_event.set)
+            command=self.cancel_event.set
         )
 
 
