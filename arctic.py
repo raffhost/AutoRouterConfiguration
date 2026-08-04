@@ -1,6 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
-from tkinter import filedialog, simpledialog
+from tkinter import filedialog
 from datetime import datetime
 from router import Router
 import config as conf
