@@ -153,6 +153,7 @@ class Router():
         if on_success:
             on_success()
 
+        self.disable_first_login()
         if log: log(f"Password changed to {new_password} successfully.")
 
 
@@ -249,6 +250,16 @@ class Router():
 
 
 
+
+
+    def disable_first_login(self):
+        self.run_command("uci set vuci.main.firstlogin='0'")
+        self.run_command("uci commit vuci")
+
+
+    def enable_first_login(self):
+        self.run_command("uci set vuci.main.firstlogin='1'")
+        self.run_command("uci commit vuci")
 
 
     def get_board_info(self):
