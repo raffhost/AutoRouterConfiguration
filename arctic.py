@@ -449,9 +449,19 @@ class App(tk.Tk):
     def _wait_for_router_and_reconnect(self, show_banner=False):
         while not self.router.is_router_active(self.router_ip.get()):
             if self.cancel_event.is_set():
-                raise InterruptedError("RECONNECTION")
+                raise InterruptedError
             time.sleep(1)
-        self._on_connect(show_banner=show_banner)
+
+        if self.router.is_connected():
+            return True
+
+        try:
+            self._on_connect(show_banner=show_banner)
+        except Exception as e:
+            self.log_queue.put(f"[ERROR]: {e}")
+            return False
+        
+        return True
 
     # --- Change router password ---
 
@@ -564,28 +574,32 @@ class App(tk.Tk):
         if not self.select_firmware.get():
             return False
 
+        # Needs fix for the problem:
+        # When you select a firmware file from your PC, the combobox index resets to -1, 
+        # which causes Python to either throw a "list index out of range" error or mistakenly 
+        # upload the very last firmware from your saved list due to Python's negative indexing.
+        firmware = None
+        saved_firmware = FIRMWARE_LIST[self.select_firmware.current()]
         if self.custom_firmware:
-            selected = self.custom_firmware
-            firmware_path = selected["Path"]
-        else:
-            idx = self.select_firmware.current()
-            
-            if idx == -1:
-                self.log_queue.put("[ERROR]: No firmware selected.")
+            firmware = self.custom_firmware
+        else: 
+            if not saved_firmware:
+                self.log_queue.put("[ERROR]: No firmware selected")
                 return False
-        
-            selected = FIRMWARE_LIST[idx]
-            firmware_path = selected["Path"]
+            firmware = saved_firmware
+
+        firmware_path = firmware["Path"]
+        firmware_version = firmware["Version"]
 
         current_firmware = self.router.get_firmware_version()
 
-        if self.router.is_router_updated(selected["Version"]) and self.update_checkbox_state.get()==0:
+        if self.router.is_router_updated(firmware_version) and self.update_checkbox_state.get()==0:
             self.log_queue.put(f"Router firmware is up to date. No update needed.")
-            self.log_queue.put(f"Current firmware: {selected["Version"]}\n If you still want to update, toogle update_checkbox on. ")
-            return False
+            self.log_queue.put(f"Current firmware: {firmware_version}\n If you still want to update, toogle update_checkbox on. ")
+            return True
 
         self.log_queue.put(f"Current firmware: {current_firmware}")
-        self.log_queue.put(f"Updating to: {selected["Version"]}. Please wait...")
+        self.log_queue.put(f"Updating to: {firmware_version}. Please wait...")
         self.router.update(
             firmware_path=firmware_path,
             log=self.log_queue.put
@@ -1096,6 +1110,69 @@ class App(tk.Tk):
         self.cancel_button.place_forget()
         self.auto_configuration_button.place(relx=0.600, rely=0.5225, relwidth=0.350, relheight=0.051)
 
+    #-------------------------------------------------------------
+    #   FULL CONFIGURATION 
+    #-------------------------------------------------------------
+
+    def button_for_full_configuration(self):
+        self.full_configuration_button = tk.Button(
+            master=self,
+            text="Full Configuration",
+            font=conf.BUTTONS_FONT_2,
+            bg=conf.BUTTONS_BG_COLOR,
+            fg=conf.BUTTONS_FG_COLOR,
+            command=lambda: self.run_in_thread(
+                self._on_full_configuration
+            )
+        )
+        self.full_configuration_button.place(relx=0.600, rely=0.5225,relwidth=0.350, relheight=0.051)
+
+
+    def do_and_check_function(self, func, check, show_banner=False, timeout=300):
+        if not self._wait_for_router_and_reconnect(show_banner=show_banner):
+            raise ConnectionError("[ERROR]: We couldn't connect your router for some reason.")
+            # cancel full configuration
+        func()
+        time.sleep(3)
+
+        start_time = time.time()
+        while self.router.threading_busy.is_set() or not check():
+            if self.cancel_event.is_set():
+                raise InterruptedError
+            if time.time() - start_time > timeout:
+                self.log_queue.put("[ERROR]: Timeout.")
+                raise TimeoutError
+            time.sleep(1)
+        time.sleep(1)
+
+
+    def _on_full_configuration(self):
+        self.log_queue.put("Configuration started. Wait...(~3min)")
+        try:
+            self.log_queue.put("\n\n=========================\n")
+            self.do_and_check_function(self._on_firmware_update, self.router.is_router_updated)
+            self.log_queue.put("\n\n=========================\n")
+            self.do_and_check_function(self._on_change_isp, self.router.is_isp_changed)
+            self.log_queue.put("\n\n=========================\n")
+            self.do_and_check_function(self._on_change_apn, self.router.is_apn_changed)
+            self.log_queue.put("\n\n=========================\n")
+
+            self.log_queue.put("Configuration has completed!")
+            self.log_queue.put("Press refresh to see if everythings right.")
+
+        except InterruptedError:
+            self.log_queue.put("You stopped configuration.")
+
+        except Exception as e:
+            self.log_queue.put("Configuration stopped because of the error")
+            self.log_queue.put(f"[ERROR]: {e}")
+
+            
+
+        
+
+
+        
 
     #-------------------------------------------------------------
     #   LOGGING AND APPLICATION STARTUP
@@ -1174,7 +1251,7 @@ class App(tk.Tk):
         self.button_for_router_info_refresh()
         self.create_imei_checkbox()
 
-        self.button_for_auto_configuration()
+        self.button_for_full_configuration()
 
         self.mainloop()
 
