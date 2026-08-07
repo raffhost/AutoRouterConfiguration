@@ -433,14 +433,18 @@ class App(tk.Tk):
             raise ValueError("Router PW is empty.")
         
         try:
-            self.router.connect(
+            connection = self.router.connect(
                 ip=ip,
                 router_password=password,
                 log=self.log_queue.put, 
                 show_banner=show_banner   
             )
+            time.sleep(0.5)
+            if not connection:
+                return False
+            
         except Exception as e:
-            self.log_queue.put(f"[ERROR]:{e}")
+            self.log_queue.put(f"[ERROR]: {e}")
             return False
 
         return True
@@ -458,7 +462,7 @@ class App(tk.Tk):
             return True
 
         try:
-            self._on_connect(show_banner=show_banner)
+            self._on_connect(show_banner)
         except Exception as e:
             self.log_queue.put(f"[ERROR]: {e}")
             return False
@@ -1011,6 +1015,7 @@ class App(tk.Tk):
 
 
     def do_and_check_function(self, func, check, show_banner=False, timeout=300):
+        time.sleep(1)
         if not self._wait_for_router_and_reconnect(show_banner=show_banner):
             raise ConnectionError("We couldn't connect to your router for some reason.")
 
@@ -1032,7 +1037,6 @@ class App(tk.Tk):
                 self.log_queue.put("[ERROR]: Timeout.")
                 raise TimeoutError
             time.sleep(1)
-        time.sleep(1)
 
 
     def _on_full_configuration(self):
