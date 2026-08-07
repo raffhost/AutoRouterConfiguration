@@ -52,7 +52,7 @@ class Router():
             try:
                 func(*args, **kwargs)
             except Exception as e:
-                print(f"[ERROR] Queue: {e}")
+                print(f"[ERROR]: {e}")
             finally:
                 self.threading_busy.clear()
                 self.task_queue.task_done()
@@ -63,7 +63,7 @@ class Router():
 
 
     def connect(self, ip="192.168.1.1", user="root", router_password="admin01", log=None, show_banner=False):
-        self.add_to_queue(self._connect_process, ip, user, router_password, log, show_banner)
+        return self._connect_process(ip, user, router_password, log, show_banner)
 
 
     def update(self, firmware_path, log=None):
@@ -95,15 +95,17 @@ class Router():
             self.client.connect(
                 hostname=ip, username=user, 
                 password=router_password,
-                timeout=3, banner_timeout=3
+                timeout=5, banner_timeout=5
             )
             if log: 
                 log(f"Successfully connected to {ip}.")
                 if show_banner:
                     log(f"\n{self.get_banner()}")
+            return True
         
         except Exception as e:
-            if log: log(f"[ERROR] Connection failed: {e}")
+            if log: log(f"[ERROR]: Connection failed: {e}")
+            return False
 
 
     def _update_process(self, firmware_path, log=None):
@@ -118,7 +120,7 @@ class Router():
         if exit_code != 0:
             if log:
                 log("Update aborted: firmware incompatible with this device.")
-                log(f"[ERROR] Router: {(err or out).strip()}")
+                log(f"[ERROR]: Router: {(err or out).strip()}")
             return
 
         if log: log("Firmware compatible. Starting update...")
@@ -136,7 +138,7 @@ class Router():
         if exit_code != 0:
             if log:
                 error_text = (err or out).strip()
-                log(f"[ERROR] Root:{error_text}")
+                log(f"[ERROR]: Root:{error_text}")
             return
 
         username = self.get_username().strip()
@@ -147,7 +149,7 @@ class Router():
             if exit_code != 0:
                 if log:
                     error_text = (err or out).strip()
-                    log(f"[ERROR] {username}:{error_text}")
+                    log(f"[ERROR]: {username}:{error_text}")
                 return
 
         if on_success:
