@@ -1,6 +1,6 @@
 {
     "ROUTER_PASSWORD_LIST": "admin01",
-    "NEW_PASSWORD_LIST": "admin01!",
+    "NEW_PASSWORD_LIST": "Admin01!",
     "FIRMWARE_LIST": [],
     "ISP_PROFILE_LIST": [
         {
