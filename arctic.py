@@ -424,23 +424,25 @@ class App(tk.Tk):
         password = self.router_password.get().strip()
 
         if not self.router.is_router_active(ip):
-            self.log_queue.put("[ERROR]: No active router.")
-            return False
+            raise ConnectionError("No active router.")
             
         if not ip:
-            self.log_queue.put("[ERROR]: Router IP is empty.")
-            return False
+            raise ValueError("Router IP is empty.")
         
         if not password:
-            self.log_queue.put("[ERROR]: router password is empty.")
+            raise ValueError("Router PW is empty.")
+        
+        try:
+            self.router.connect(
+                ip=ip,
+                router_password=password,
+                log=self.log_queue.put, 
+                show_banner=show_banner   
+            )
+        except Exception as e:
+            self.log_queue.put(f"[ERROR]:{e}")
             return False
 
-        self.router.connect(
-            ip=ip,
-            router_password=password,
-            log=self.log_queue.put, 
-            show_banner=show_banner   
-        )
         return True
 
 
@@ -480,27 +482,29 @@ class App(tk.Tk):
     def _on_change_password(self) -> bool:
         ip=self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("[ERROR]: No active router.")
-            return False
+            raise ConnectionError("No active router.")
 
         if not self.router.is_connected():
-            self.log_queue.put("[ERROR]: Not connected. Press Connect first.")
-            return False
+            raise ConnectionError("Not connected. Press Connect first.")
         
         password = self.new_password.get().strip()
         if not password:
-            self.log_queue.put("[ERROR]: New password is empty.")
-            return False
+            raise ValueError("New password is empty.")
 
         def on_password_changed():
             # Update password if no exception occurred during the password change
             self._update_router_password_combobox(password)
 
-        self.router.change_password(
-            new_password=password,
-            log=self.log_queue.put,
-            on_success=on_password_changed
-        )
+        try:
+            self.router.change_password(
+                new_password=password,
+                log=self.log_queue.put,
+                on_success=on_password_changed
+            )
+        except Exception as e:
+            self.log_queue.put(f"[ERROR]: {e}")
+            return False
+        
         return True
 
 
@@ -530,21 +534,20 @@ class App(tk.Tk):
     def _on_disconnect(self):
         ip = self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("[ERROR]: No active router.")
-            return False
+            raise ConnectionError("No active router.")
 
         if not self.router.is_connected():
-            self.log_queue.put("[ERROR]: Not connected. Press Connect first.")
-            return False
+            raise ConnectionError("Not connected. Press Connect first.")
     
-        if not ip:
-            self.log_queue.put("[ERROR]: Router IP is empty.")
+        try:
+            self.router.disconnect(
+                ip=ip,
+                log=self.log_queue.put
+            )
+        except Exception as e:
+            self.log_queue.put(f"[ERROR]: {e}")
             return False
-
-        self.router.disconnect(
-            ip=ip,
-            log=self.log_queue.put
-        )
+        
         return True
 
     # --- Firmware update ---
@@ -564,12 +567,10 @@ class App(tk.Tk):
     def _on_firmware_update(self):
         ip = self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("[ERROR]: No active router.")
-            return False
+            raise ConnectionError("No active router.")
 
         if not self.router.is_connected():
-            self.log_queue.put("[ERROR]: Not connected. Press Connect first.")
-            return False
+            raise ConnectionError("Not connected. Press Connect first.")
         
         if not self.select_firmware.get():
             return False
@@ -579,32 +580,34 @@ class App(tk.Tk):
         # which causes Python to either throw a "list index out of range" error or mistakenly 
         # upload the very last firmware from your saved list due to Python's negative indexing.
         firmware = None
-        saved_firmware = FIRMWARE_LIST[self.select_firmware.current()]
         if self.custom_firmware:
             firmware = self.custom_firmware
-        else: 
+        else:
+            saved_firmware = FIRMWARE_LIST[self.select_firmware.current()]
             if not saved_firmware:
-                self.log_queue.put("[ERROR]: No firmware selected")
-                return False
+                raise ValueError("No firmware selected.")
             firmware = saved_firmware
-
-        firmware_path = firmware["Path"]
-        firmware_version = firmware["Version"]
 
         current_firmware = self.router.get_firmware_version()
 
-        if self.router.is_router_updated(firmware_version) and self.update_checkbox_state.get()==0:
+        if self.router.is_router_updated(firmware["Version"]) and self.update_checkbox_state.get()==0:
             self.log_queue.put(f"Router firmware is up to date. No update needed.")
-            self.log_queue.put(f"Current firmware: {firmware_version}\n If you still want to update, toogle update_checkbox on. ")
-            return True
+            self.log_queue.put(f"Current firmware: {firmware["Version"]}\n If you still want to update, toogle update_checkbox on.")
+            return firmware["Version"]
 
         self.log_queue.put(f"Current firmware: {current_firmware}")
-        self.log_queue.put(f"Updating to: {firmware_version}. Please wait...")
-        self.router.update(
-            firmware_path=firmware_path,
-            log=self.log_queue.put
-        )
-        return True
+        self.log_queue.put(f"Updating to: {firmware["Version"]}. Please wait...")
+
+        try:
+            self.router.update(
+                firmware_path=firmware["Path"],
+                log=self.log_queue.put
+            )
+        except Exception as e:
+            self.log_queue.put(f"[ERROR]: {e}")
+            return False
+
+        return firmware["Version"]
 
 
     def checkbox_for_updating(self):
@@ -716,40 +719,32 @@ class App(tk.Tk):
     def _on_change_isp(self):
         ip=self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("[ERROR]: No active router.")
-            return False
+            raise ConnectionError("No active router.")
         
         if not self.router.is_connected():
-            self.log_queue.put("[ERROR]: Not connected. Press Connect first.")
-            return False
+            raise ConnectionError("Not connected. Press Connect first.")
         
         isp = self.select_isp.get().strip()
         if not isp:
-            self.log_queue.put("[ERROR]: No ISP profile selected.")
-            return False
+            raise ValueError("No ISP selected.")
         
         if self.router.is_isp_changed(isp):
             self.log_queue.put(f"ISP is up to date. No update needed.")
             self.log_queue.put(f"Current ISP: {isp}")
-            return False
+            return isp
 
         try:
             self.router.change_isp(
                 isp=isp,
                 log=self.log_queue.put
             )
-
-            if not self.router.is_isp_changed(isp):
-                return False
-            
         except Exception as e:
-            self.log_queue.put(f"[ERROR]: Something went wrong while changing ISP: {e}")
+            self.log_queue.put(f"[ERROR]: {e}")
             return False
-        
         finally:
             self.update_ip()
 
-        return True
+        return isp
 
 
     # --- Set/change APN ---
@@ -766,26 +761,28 @@ class App(tk.Tk):
         self.apn_button.place(relx=0.31, rely=0.927, relwidth=0.125, relheight=0.051)
 
 
-    def _on_change_apn(self) -> bool:
+    def _on_change_apn(self):
         ip=self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("[ERROR]: No active router.")
-            return False
+            raise ConnectionError("No active router.")
         
         if not self.router.is_connected():
-            self.log_queue.put("[ERROR]: Not connected. Press Connect first.")
-            return False
+            raise ConnectionError("Not connected. Press Connect first.")
 
         apn = self.select_apn.get().strip()
         if not apn:
-            self.log_queue.put("[ERROR]: No APN selected or entered.")
+            raise ValueError("No APN selected.")
+        
+        try:
+            self.router.change_apn(
+                apn=apn,
+                log=self.log_queue.put
+            )
+        except Exception as e:
+            self.log_queue.put(f"[ERROR]: {e}")
             return False
 
-        self.router.change_apn(
-            apn=apn,
-            log=self.log_queue.put
-        )
-        return True
+        return apn
 
 
     # --- Network restart ---
@@ -805,16 +802,18 @@ class App(tk.Tk):
     def _on_router_restart(self) -> bool:
         ip=self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("[ERROR]: No active router.")
-            return False
+            raise ConnectionError("No active router.")
 
         if not self.router.is_connected():
-            self.log_queue.put("[ERROR]: Not connected. Press Connect first.")
-            return False
-        
-        self.router.save_and_restart_network(
-            log=self.log_queue.put
-        )
+            raise ConnectionError("Not connected. Press Connect first.")
+
+        try:
+            self.router.save_and_restart_network(
+                log=self.log_queue.put
+            )
+        except Exception as e:
+            self.log_queue.put(f"[ERROR]: {e}")
+
         return True
 
 
@@ -835,16 +834,19 @@ class App(tk.Tk):
     def _on_router_reboot(self) -> bool:
         ip=self.router_ip.get().strip()
         if not self.router.is_router_active(ip):
-            self.log_queue.put("[ERROR]: No active router.")
-            return False
+            raise ConnectionError("No active router.")
 
         if not self.router.is_connected():
-            self.log_queue.put("[ERROR]: Not connected. Press Connect first.")
+            raise ConnectionError("Not connected. Press Connect first.")
+
+        try:
+            self.router.reboot(
+                log=self.log_queue.put
+            )
+        except Exception as e:
+            self.log_queue.put(f"[ERROR]: {e}")
             return False
         
-        self.router.reboot(
-            log=self.log_queue.put
-        )
         return True
 
 
@@ -989,126 +991,6 @@ class App(tk.Tk):
         )
         self.imei_checkbox.place(relx=0.750, rely=0.900, relheight=0.100)
 
-    #-------------------------------------------------------------
-    #   AUTOMATIC CONFIGURATION 
-    #   (a button that triggers multiple steps in sequence)
-    #-------------------------------------------------------------
-    
-    def wait_until(self, func, check, comment=None):
-        if comment:
-            self.log_queue.put(comment)
-        func()
-        while self.router.threading_busy.is_set() or not check():
-            if self.cancel_event.is_set():
-                raise InterruptedError(comment)
-            time.sleep(1)
-
-
-    def button_for_auto_configuration(self):
-        self.auto_configuration_button = tk.Button(
-            master=self,
-            text="Auto Configuration",
-            font=conf.BUTTONS_FONT_2,
-            bg=conf.BUTTONS_BG_COLOR,
-            fg=conf.BUTTONS_FG_COLOR,
-            command=lambda: self.run_in_thread(
-                self._on_auto_configuration
-            )
-        )
-        self.auto_configuration_button.place(relx=0.600, rely=0.5225,relwidth=0.350, relheight=0.051)
-
-
-    def _on_auto_configuration(self) -> bool:
-        ip=self.router_ip.get().strip()
-        if not self.router.is_router_active(ip):
-            self.log_queue.put("[ERROR]: No active router.")
-            return False
-
-        self.cancel_event.clear()
-        self.button_for_canceling_auto_configuration()
-        self.gui_queue.put(self._show_cancel_button)
-        
-        steps = [ # label, func, check
-            ("CONNECTION",
-            lambda: self._on_connect(show_banner=True) if not self.router.is_connected() else None,
-            self.router.is_connected
-            ),
-            ("UPDATE",
-            self._on_firmware_update,
-            lambda: self.router.is_router_updated(
-                self.custom_firmware["Version"] if self.custom_firmware
-                else FIRMWARE_LIST[self.select_firmware.current()]["Version"]
-                )
-            ),
-            ("RECONNECTION",
-            self._wait_for_router_and_reconnect,
-            self.router.is_connected
-            ),
-            ("NEW PASSWORD",
-            self._on_change_password,
-            self.router.is_connected
-            ),
-            ("ISP",
-            self._on_change_isp,
-            lambda: not self.router.is_connected()
-            ),
-            ("RECONNECTION",
-            self._wait_for_router_and_reconnect,
-            self.router.is_connected
-            ),
-            ("APN",
-            self._on_change_apn,
-            lambda: not self.router.is_connected()
-            ),
-            ("RECONNECTION",
-            lambda: self._wait_for_router_and_reconnect(show_banner=True),
-            self.router.is_connected
-            ),
-        ]
-
-        self.log_queue.put("##### CONFIGURATION STARTED #####")
-        completed_idx = 0
-        try:
-            for i, (label, func, check) in enumerate(steps):
-                self.wait_until(func=func, check=check, comment=f"----- {label} -----")
-                completed_idx = i + 1
-                time.sleep(2)
-            self.log_queue.put("##### CONFIGURATION FINISHED #####")
-            return True
-
-        except InterruptedError:
-            done = [label for label, _, _ in steps[:completed_idx]]
-            remaining = [label for label, _, _ in steps[completed_idx:]]
-
-            lines = ["----- CONFIGURATION CANCELLED BY USER -----", "", "Completed:"]
-            lines += [f"  ✔ {label}" for label in done] if done else ["  (none)"]
-            lines += ["", "Not completed:"]
-            lines += [f"  ✘ {label}" for label in remaining] if remaining else ["  (none)"]
-
-            self.log_queue.put("\n".join(lines))
-            return False
-
-        finally:
-            self.gui_queue.put(self._hide_cancel_button)
-
-
-    def button_for_canceling_auto_configuration(self):
-        self.cancel_button = tk.Button(
-            master=self,
-            text="Cancel",
-            font=conf.BUTTONS_FONT_2,
-            bg="#E27E7E",
-            command=self.cancel_event.set
-        )
-
-
-    def _show_cancel_button(self):
-        self.auto_configuration_button.place_forget()
-        self.cancel_button.place(relx=0.600, rely=0.5225, relwidth=0.350, relheight=0.051)
-
-    def _hide_cancel_button(self):
-        self.cancel_button.place_forget()
-        self.auto_configuration_button.place(relx=0.600, rely=0.5225, relwidth=0.350, relheight=0.051)
 
     #-------------------------------------------------------------
     #   FULL CONFIGURATION 
@@ -1130,13 +1012,20 @@ class App(tk.Tk):
 
     def do_and_check_function(self, func, check, show_banner=False, timeout=300):
         if not self._wait_for_router_and_reconnect(show_banner=show_banner):
-            raise ConnectionError("[ERROR]: We couldn't connect your router for some reason.")
-            # cancel full configuration
-        func()
-        time.sleep(3)
+            raise ConnectionError("We couldn't connect to your router for some reason.")
+
+        result = func()
+        if not result:
+            raise ValueError ("Function couldn't check ")
+
+        start_sleep = time.time()
+        while time.time() - start_sleep < 3:
+            if self.cancel_event.is_set():
+                raise InterruptedError
+            time.sleep(0.5)        
 
         start_time = time.time()
-        while self.router.threading_busy.is_set() or not check():
+        while self.router.threading_busy.is_set() or not check(result):
             if self.cancel_event.is_set():
                 raise InterruptedError
             if time.time() - start_time > timeout:
@@ -1148,6 +1037,9 @@ class App(tk.Tk):
 
     def _on_full_configuration(self):
         self.log_queue.put("Configuration started. Wait...(~3min)")
+        self.button_for_canceling_full_configuration()
+        self.gui_queue.put(self._show_cancel_button)
+        time.sleep(1)
         try:
             self.log_queue.put("\n\n=========================\n")
             self.do_and_check_function(self._on_firmware_update, self.router.is_router_updated)
@@ -1161,18 +1053,35 @@ class App(tk.Tk):
             self.log_queue.put("Press refresh to see if everythings right.")
 
         except InterruptedError:
+            self.gui_queue.put(self._hide_cancel_button)
             self.log_queue.put("You stopped configuration.")
 
         except Exception as e:
-            self.log_queue.put("Configuration stopped because of the error")
+            self.gui_queue.put(self._hide_cancel_button)
             self.log_queue.put(f"[ERROR]: {e}")
-
+            self.log_queue.put("Configuration stopped.")
             
 
-        
+
+    def button_for_canceling_full_configuration(self):
+        self.cancel_button = tk.Button(
+            master=self,
+            text="Cancel",
+            font=conf.BUTTONS_FONT_2,
+            bg="#E27E7E",
+            command=self.cancel_event.set
+        )
 
 
-        
+    def _show_cancel_button(self):
+        self.full_configuration_button.place_forget()
+        self.cancel_button.place(relx=0.600, rely=0.5225, relwidth=0.350, relheight=0.051)
+
+
+    def _hide_cancel_button(self):
+        self.cancel_button.place_forget()
+        self.full_configuration_button.place(relx=0.600, rely=0.5225, relwidth=0.350, relheight=0.051)
+
 
     #-------------------------------------------------------------
     #   LOGGING AND APPLICATION STARTUP
